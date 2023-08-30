@@ -1,0 +1,82 @@
+{
+  "project_info": {
+    "project_number": "314657496270",
+    "project_id": "estore-2b90f",
+    "storage_bucket": "estore-2b90f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:314657496270:android:7f1ee745c9f8ee2e83849f",
+        "android_client_info": {
+          "package_name": "com.quantec.estore"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "314657496270-3crq9cb2astq5pog70nq0k32dfmq83p4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDroL9Q7h4j4qZ3eUIoBcTk0OSsUUtu_os"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "314657496270-3crq9cb2astq5pog70nq0k32dfmq83p4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "314657496270-ducbflo6rb7g9pa9fhq3942g07s83rfm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.quantec.estore"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:314657496270:android:cff3425c99a1302083849f",
+        "android_client_info": {
+          "package_name": "com.quantec.estore"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "314657496270-3crq9cb2astq5pog70nq0k32dfmq83p4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDroL9Q7h4j4qZ3eUIoBcTk0OSsUUtu_os"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "314657496270-3crq9cb2astq5pog70nq0k32dfmq83p4.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "314657496270-ducbflo6rb7g9pa9fhq3942g07s83rfm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.quantec.estore"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
