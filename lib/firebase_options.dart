@@ -44,41 +44,43 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyARxnIkOmKGzuItp9yu1bqjt0EB0gT_fv8',
-    appId: '1:314657496270:web:f50bf0a138a8ab4683849f',
-    messagingSenderId: '314657496270',
-    projectId: 'estore-2b90f',
-    authDomain: 'estore-2b90f.firebaseapp.com',
-    storageBucket: 'estore-2b90f.appspot.com',
+    apiKey: 'AIzaSyDs1_6qpIAcU742BvK71tp_A_aGkWPfZ1k',
+    appId: '1:403025843120:web:66201d7515a75d1635fc75',
+    messagingSenderId: '403025843120',
+    projectId: 'estore-ept5',
+    authDomain: 'estore-ept5.firebaseapp.com',
+    databaseURL: 'https://estore-ept5-default-rtdb.firebaseio.com',
+    storageBucket: 'estore-ept5.appspot.com',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDroL9Q7h4j4qZ3eUIoBcTk0OSsUUtu_os',
-    appId: '1:314657496270:android:cff3425c99a1302083849f',
-    messagingSenderId: '314657496270',
-    projectId: 'estore-2b90f',
-    storageBucket: 'estore-2b90f.appspot.com',
+    apiKey: 'AIzaSyAtNvhBN6rsAPz5HNgJRwC7203CuFpGmPU',
+    appId: '1:403025843120:android:07b1489154de239735fc75',
+    messagingSenderId: '403025843120',
+    projectId: 'estore-ept5',
+    databaseURL: 'https://estore-ept5-default-rtdb.firebaseio.com',
+    storageBucket: 'estore-ept5.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDHclZmOl0P27Z39G5bDEDAy2pCiaIw6sw',
-    appId: '1:314657496270:ios:9a7b6476cfe8028483849f',
-    messagingSenderId: '314657496270',
-    projectId: 'estore-2b90f',
-    storageBucket: 'estore-2b90f.appspot.com',
-    iosClientId:
-        '314657496270-ducbflo6rb7g9pa9fhq3942g07s83rfm.apps.googleusercontent.com',
+    apiKey: 'AIzaSyBmUEmG4LtyB9RdCvcurwRXVvVCgjyEytI',
+    appId: '1:403025843120:ios:9c2cdaec6870c41b35fc75',
+    messagingSenderId: '403025843120',
+    projectId: 'estore-ept5',
+    databaseURL: 'https://estore-ept5-default-rtdb.firebaseio.com',
+    storageBucket: 'estore-ept5.appspot.com',
+    iosClientId: '403025843120-l780m8u63a3c0tb5gcvmgb2en9vfdkfn.apps.googleusercontent.com',
     iosBundleId: 'com.quantec.estore',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDHclZmOl0P27Z39G5bDEDAy2pCiaIw6sw',
-    appId: '1:314657496270:ios:274d0589564757b283849f',
-    messagingSenderId: '314657496270',
-    projectId: 'estore-2b90f',
-    storageBucket: 'estore-2b90f.appspot.com',
-    iosClientId:
-        '314657496270-u597tkpguiv1gi268477i3hfacb1lsoh.apps.googleusercontent.com',
+    apiKey: 'AIzaSyBmUEmG4LtyB9RdCvcurwRXVvVCgjyEytI',
+    appId: '1:403025843120:ios:7f955aaa27bd985a35fc75',
+    messagingSenderId: '403025843120',
+    projectId: 'estore-ept5',
+    databaseURL: 'https://estore-ept5-default-rtdb.firebaseio.com',
+    storageBucket: 'estore-ept5.appspot.com',
+    iosClientId: '403025843120-b68a2075bproc3n25aaqrq57jkhqaqje.apps.googleusercontent.com',
     iosBundleId: 'com.quantec.estore.RunnerTests',
   );
 }

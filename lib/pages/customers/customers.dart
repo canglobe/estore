@@ -14,10 +14,84 @@ class CustomersScreen extends StatefulWidget {
 }
 
 class _CustomersScreenState extends State<CustomersScreen> {
-  getData() async {
-    Map ldbcc = await localdb.get('ldbcc') ?? {};
+  final nameController = TextEditingController();
 
-    return ldbcc;
+  bool ifintialloading = true;
+  Widget progress() {
+    // loading();
+    return ifintialloading == true
+        ? const SizedBox()
+        : const Center(
+            child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(Icons.info),
+              SizedBox(
+                width: 3,
+              ),
+              Text('First add any one product and \nthen add Customers'),
+            ],
+          ));
+  }
+
+  loading() async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    setState(() {
+      ifintialloading = false;
+    });
+  }
+
+  showbox() {
+    showDialog(
+        context: context,
+        builder: (c) {
+          return AlertDialog(
+            title: const Text('New Customer'),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.all(15),
+                child: TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Customer Name',
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 15,
+              ),
+              ElevatedButton(
+                onPressed: newCustomer,
+                child: const Text('Done'),
+              ),
+            ],
+          );
+        });
+  }
+
+  void newCustomer() async {
+    //
+    if (nameController.text.isNotEmpty) {
+      List personNames = await localdb.get('personsNames') ?? [];
+      personNames.add(nameController.text);
+
+      await localdb.put('personsNames', personNames);
+      navigation();
+
+      setState(() {});
+    } else {}
+  }
+
+  navigation() {
+    Navigator.pop(context);
+  }
+
+  getData() async {
+    List personNames = await localdb.get('personsNames') ?? [];
+
+    return personNames;
   }
 
   List colorslist = [
@@ -53,14 +127,8 @@ class _CustomersScreenState extends State<CustomersScreen> {
           future: getData(),
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.hasData && snapshot.data.isNotEmpty) {
-              List keys = [];
-              Map snap = snapshot.data;
-
-              for (var x in snap.keys) {
-                keys.add(x);
-              }
-
-              keys.sort();
+              List snap = snapshot.data;
+              snap.sort();
 
               return Padding(
                 padding: const EdgeInsets.all(15),
@@ -69,17 +137,17 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     return Card(
                       child: GestureDetector(
                         onTap: () {
-                          var pname = keys[index];
+                          var person = snap[index];
                           Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => CustomerDetailsScreen(
-                                    pname: pname,
+                                    person: person,
                                   )));
                         },
                         child: ListTile(
                           leading: CircleAvatar(
                             backgroundColor: colorslist[Random().nextInt(7)],
                             child: Text(
-                                keys[index]
+                                snap[index]
                                     .toString()
                                     .substring(0, 1)
                                     .toUpperCase(),
@@ -90,7 +158,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                 )),
                           ),
                           title: Text(
-                            keys[index],
+                            snap[index],
                             style: mystyle(20, bold: true),
                           ),
                           trailing: const Icon(Icons.chevron_right),
@@ -98,7 +166,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                       ),
                     );
                   },
-                  itemCount: keys.length,
+                  itemCount: snap.length,
                 ),
               );
             } else {
@@ -114,70 +182,5 @@ class _CustomersScreenState extends State<CustomersScreen> {
         child: const Icon(Icons.add),
       ),
     );
-  }
-
-  final nameController = TextEditingController();
-
-  bool ifintialloading = true;
-  Widget progress() {
-    loading();
-    return ifintialloading == true
-        ? const SizedBox()
-        : const Center(
-            child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(Icons.info),
-              SizedBox(
-                width: 3,
-              ),
-              Text('First add any one product and \nthen add Customers'),
-            ],
-          ));
-  }
-
-  loading() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    setState(() {
-      ifintialloading = false;
-    });
-  }
-
-  showbox() {
-    showDialog(
-        context: context,
-        builder: (c) {
-          return AlertDialog(
-            title: const Text('New Customer'),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.all(15),
-                child: TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Customer Name',
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 15,
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  //
-                  Map ldbcc =
-                      await localdb.get('ldbcc') ?? {nameController.text: {}};
-                  ldbcc[nameController.text] = {};
-                  await localdb.put('ldbcc', ldbcc);
-                  Navigator.pop(context);
-                  setState(() {});
-                },
-                child: const Text('Done'),
-              ),
-            ],
-          );
-        });
   }
 }

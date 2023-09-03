@@ -1,16 +1,17 @@
 import 'package:estore/constants.dart';
-import 'package:estore/hive/hiveinit.dart';
+
 import 'package:estore/main.dart';
 import 'package:estore/utils/size.dart';
 import 'package:estore/widgets/widgets.dart';
+
 import 'package:flutter/material.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
-  final String pname;
+  final String person;
 
   const CustomerDetailsScreen({
     super.key,
-    required this.pname,
+    required this.person,
   });
 
   @override
@@ -19,17 +20,80 @@ class CustomerDetailsScreen extends StatefulWidget {
 
 class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   String? selectedproduct;
-  @override
-  void initState() {
-    productsList();
-    super.initState();
+
+  save1() async {
+    try {
+      Map productsHistory = await localdb.get('productsHistory') ?? {};
+      Map personsHistory = await localdb.get('personsHistory') ?? {};
+      var date = DateTime.now().toString().substring(0, 22);
+
+      Map map1 = productsHistory[selectedproduct] ?? {selectedproduct: {}};
+      map1[date] = {
+        'person': widget.person,
+        'quantity': quantityController.text,
+      };
+
+      Map map2 = personsHistory[widget.person] ?? {widget.person: {}};
+      map2[date] = {
+        'product': selectedproduct,
+        'quantity': quantityController.text,
+      };
+
+      await localdb.put('productsHistory', productsHistory);
+      await localdb.put('personsHistory', personsHistory);
+    } catch (e) {
+//
+    }
+  }
+
+  save() async {
+    Map productsHistory = await localdb.get('productsHistory') ?? {};
+    Map personsHistory = await localdb.get('personsHistory') ?? {};
+    var date = DateTime.now().toString().substring(0, 22);
+
+    if (!productsHistory.containsKey(selectedproduct)) {
+      productsHistory[selectedproduct] = {};
+      productsHistory[selectedproduct][date] = {
+        'person': widget.person,
+        'quantity': quantityController.text,
+      };
+      await localdb.put('productsHistory', productsHistory);
+    } else {
+      productsHistory[selectedproduct][date] = {
+        'person': widget.person,
+        'quantity': quantityController.text,
+      };
+      await localdb.put('productsHistory', productsHistory);
+    }
+
+    if (!personsHistory.containsKey(widget.person)) {
+      personsHistory[widget.person] = {};
+      personsHistory[widget.person][date] = {
+        'product': selectedproduct,
+        'quantity': quantityController.text,
+      };
+      await localdb.put('personsHistory', personsHistory);
+    } else {
+      personsHistory[widget.person][date] = {
+        'product': selectedproduct,
+        'quantity': quantityController.text,
+      };
+      await localdb.put('personsHistory', personsHistory);
+    }
+
+    Map productsDetails = await localdb.get('productsDetails') ?? {};
+    var quantity = productsDetails[selectedproduct]['quantity'];
+    int qty = int.parse(quantity) - int.parse(quantityController.text);
+    productsDetails[selectedproduct]['quantity'] = qty.toString();
+    await localdb.put('productsDetails', productsDetails);
   }
 
   String err = '';
-  getData() async {
-    Map ldbcc = await localdb.get('ldbcc') ?? {};
 
-    return ldbcc;
+  getData() async {
+    Map personsHistory = await localdb.get('personsHistory') ?? {};
+
+    return personsHistory;
   }
 
   var numbers = [
@@ -40,220 +104,28 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     '5',
   ];
 
-  List<String>? products;
-
-  List<String>? nothing = [];
+  List? products;
 
   bool ifselling = false;
+
   final quantityController = TextEditingController();
 
+  productsList() async {
+    List productsNames = await localdb.get('productsNames') ?? [];
+
+    setState(() {
+      products = productsNames;
+      selectedproduct = productsNames[0];
+    });
+  }
+
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          actions: const [
-            //
-          ],
-        ),
-        body: Column(
-          children: [
-            const SizedBox(
-              height: 20,
-            ),
-            ifselling != true
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Text(
-                        widget.pname,
-                        style: mystyle(24),
-                      ),
-                      myButton(
-                          onPressed: () {
-                            setState(() {
-                              ifselling = true;
-                            });
-                          },
-                          child: Text(
-                            'Sell',
-                            style: mystyle(20),
-                          ))
-                    ],
-                  )
-                : Column(
-                    // mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      const SizedBox(
-                        height: 30,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          const SizedBox(
-                            height: 15,
-                          ),
-                          SizedBox(
-                            child: DropdownMenu(
-                              width: ScreenSize(context, false, 45),
-                              label: selectedproduct != null
-                                  ? Text(
-                                      selectedproduct!.toString(),
-                                      style: mystyle(20),
-                                    )
-                                  : Text(
-                                      'Product Name',
-                                      style: mystyle(20),
-                                    ),
-                              dropdownMenuEntries: products!
-                                  .map<DropdownMenuEntry<String>>(
-                                      (String value) {
-                                return DropdownMenuEntry<String>(
-                                  value: value,
-                                  label: value,
-                                );
-                              }).toList(),
-                              onSelected: (value) {
-                                setState(() {
-                                  selectedproduct = value;
-                                });
-                              },
-                              textStyle: mystyle(20),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 15,
-                          ),
-                          SizedBox(
-                            // width: ScreenSize(context, false, 43),
-                            child: DropdownMenu(
-                              controller: quantityController,
-                              width: ScreenSize(context, false, 45),
-                              initialSelection: numbers[0],
-                              label: Text(
-                                'Quantity',
-                                style: mystyle(20),
-                              ),
-                              dropdownMenuEntries: numbers.map((e) {
-                                return DropdownMenuEntry(value: e, label: e);
-                              }).toList(),
-                              onSelected: (value) {
-                                setState(() {
-                                  //
-                                  quantityController.text = value!;
-                                });
-                              },
-                              textStyle: mystyle(20),
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 15,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 45,
-                      ),
-                      myButton(
-                          onPressed: () {
-                            // sellboxshow(context);
-                            storeData();
-                            setState(() {
-                              ifselling = false;
-                            });
-                          },
-                          child: Text(
-                            'Sell',
-                            style: mystyle(20),
-                          ))
-                    ],
-                  ),
-            //
-            const SizedBox(
-              height: 20,
-            ),
-            const Divider(),
-            ifselling != true
-                ? Expanded(
-                    child: FutureBuilder(
-                      future: getData(),
-                      builder: (BuildContext context,
-                          AsyncSnapshot<dynamic> snapshot) {
-                        if (snapshot.hasData && snapshot.data.isNotEmpty) {
-                          List keys = [];
-                          Map snap = snapshot.data[widget.pname];
-                          snap.keys;
-                          for (var x in snap.keys) {
-                            keys.add(x);
-                          }
-
-                          keys.sort();
-                          keys = keys.reversed.toList();
-
-                          return ListView.builder(
-                            itemBuilder: (context, index) {
-                              return Card(
-                                child: ListTile(
-                                  isThreeLine: true,
-                                  trailing: Text(
-                                    snap[keys[index]]['name'],
-                                    style: mystyle(20, bold: true),
-                                  ),
-                                  subtitle: const SizedBox(),
-                                  leading: SizedBox(
-                                    width: ScreenSize(context, false, 45),
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                          keys[index]
-                                              .toString()
-                                              .substring(0, 10),
-                                          style: mystyle(20, bold: true),
-                                        ),
-                                        const SizedBox(
-                                          width: 5,
-                                        ),
-                                        const Text('/'),
-                                        const SizedBox(
-                                          width: 5,
-                                        ),
-                                        Text(
-                                          snap[keys[index]]['qty'],
-                                          style: mystyle(23),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                            itemCount: keys.length,
-                          );
-                        } else {
-                          return const CircularProgressIndicator();
-                        }
-                      },
-                    ),
-                  )
-                : const Center()
-          ],
-        ));
+  void initState() {
+    productsList();
+    super.initState();
   }
 
   final pr1 = TextEditingController();
-
-  productsList() async {
-    List<String> lst = [];
-    Map ldb = await HiveBox().ldb();
-    for (var element in ldb.keys) {
-      lst.add(element);
-    }
-
-    setState(() {
-      products = lst;
-      selectedproduct = lst[0];
-    });
-    return lst;
-  }
 
   sellboxshow(context) async {
     productsList();
@@ -280,10 +152,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
               },
             ),
             OutlinedButton(
+              onPressed: save,
               child: const Text('Confirm'),
-              onPressed: () {
-                storeData();
-              },
             ),
           ],
         );
@@ -291,33 +161,194 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     );
   }
 
-  storeData() async {
-    var date = DateTime.now().toString().substring(0, 22);
-    var ldb = await localdb.get('ldb') ?? {};
-    Map ldbcc = await localdb.get('ldbcc') ?? {widget.pname: {}};
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(
+          actions: const [
+            //
+          ],
+        ),
+        body: Column(
+          children: [
+            const SizedBox(height: 15),
+            ifselling != true ? page1() : page2(context),
+            const SizedBox(height: 15),
+            const Divider(),
+            ifselling != true ? history() : const Center()
+          ],
+        ));
+  }
 
-    if (selectedproduct!.isNotEmpty) {
-      Map dat = ldb[selectedproduct];
-      dat['history'][date] = {
-        'name': widget.pname,
-        'qty': quantityController.text,
-        'price': ldb[selectedproduct]['price'],
-      };
+  Row page1() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Text(
+          widget.person,
+          style: mystyle(24),
+        ),
+        myButton(
+            onPressed: () {
+              setState(() {
+                ifselling = true;
+              });
+            },
+            child: Text(
+              'Sell',
+              style: mystyle(20),
+            ))
+      ],
+    );
+  }
 
-      var q = ldb[selectedproduct]['quantity'];
+  Column page2(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(
+          height: 30,
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            const SizedBox(
+              height: 15,
+            ),
+            SizedBox(
+              child: DropdownMenu(
+                width: ScreenSize(context, false, 45),
+                label: selectedproduct != null
+                    ? Text(
+                        selectedproduct!.toString(),
+                        style: mystyle(20),
+                      )
+                    : Text(
+                        'Product Name',
+                        style: mystyle(20),
+                      ),
+                dropdownMenuEntries:
+                    products!.map<DropdownMenuEntry<String>>((value) {
+                  return DropdownMenuEntry<String>(
+                    value: value,
+                    label: value,
+                  );
+                }).toList(),
+                onSelected: (value) {
+                  setState(() {
+                    selectedproduct = value;
+                  });
+                },
+                textStyle: mystyle(20),
+              ),
+            ),
+            const SizedBox(
+              height: 15,
+            ),
+            SizedBox(
+              // width: ScreenSize(context, false, 43),
+              child: DropdownMenu(
+                controller: quantityController,
+                width: ScreenSize(context, false, 45),
+                initialSelection: numbers[0],
+                label: Text(
+                  'Quantity',
+                  style: mystyle(20),
+                ),
+                dropdownMenuEntries: numbers.map((e) {
+                  return DropdownMenuEntry(value: e, label: e);
+                }).toList(),
+                onSelected: (value) {
+                  setState(() {
+                    //
+                    quantityController.text = value!;
+                  });
+                },
+                textStyle: mystyle(20),
+              ),
+            ),
+            const SizedBox(
+              height: 15,
+            ),
+          ],
+        ),
+        const SizedBox(
+          height: 45,
+        ),
+        myButton(
+            onPressed: () {
+              // sellboxshow(context);
+              save();
+              setState(() {
+                ifselling = false;
+              });
+            },
+            child: Text(
+              'Sell',
+              style: mystyle(20),
+            ))
+      ],
+    );
+  }
 
-      q = int.parse(q) - int.parse(quantityController.text);
+  Widget history() {
+    return Expanded(
+      child: FutureBuilder(
+        future: getData(),
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          if (snapshot.hasData && snapshot.data.isNotEmpty) {
+            List keys = [];
+            Map snap = snapshot.data[widget.person];
 
-      ldb[selectedproduct]['quantity'] = q.toString();
+            snap.keys;
+            for (var x in snap.keys) {
+              keys.add(x);
+            }
 
-      await localdb.put('ldb', ldb);
+            keys.sort();
+            keys = keys.reversed.toList();
 
-      ldbcc[widget.pname][date] = {
-        'name': selectedproduct,
-        'qty': quantityController.text,
-        'price': ldb[selectedproduct]['price'],
-      };
-      await localdb.put('ldbcc', ldbcc);
-    } else {}
+            return ListView.builder(
+              itemBuilder: (context, index) {
+                return Card(
+                  child: ListTile(
+                    isThreeLine: true,
+                    trailing: Text(
+                      snap[keys[index]]['product'],
+                      style: mystyle(20, bold: true),
+                    ),
+                    subtitle: const SizedBox(),
+                    leading: SizedBox(
+                      width: ScreenSize(context, false, 45),
+                      child: Row(
+                        children: [
+                          Text(
+                            keys[index].toString().substring(0, 10),
+                            style: mystyle(20, bold: true),
+                          ),
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          const Text('/'),
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          Text(
+                            snap[keys[index]]['quantity'],
+                            style: mystyle(23),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+              itemCount: keys.length,
+            );
+          } else {
+            return const Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
+    );
   }
 }

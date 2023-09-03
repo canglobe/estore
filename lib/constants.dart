@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+String imagePath =
+    "/storage/emulated/0/Android/data/com.quantec.estore/files/images/";
+
 const List imgurl = [
   'https://img.freepik.com/free-photo/wide-angle-shot-single-tree-growing-clouded-sky-during-sunset-surrounded-by-grass_181624-22807.jpg?w=2000',
   'https://img.freepik.com/free-photo/green-field-tree-blue-skygreat-as-backgroundweb-banner-generative-ai_1258-158251.jpg?w=2000',

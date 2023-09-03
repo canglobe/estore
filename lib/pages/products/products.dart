@@ -1,184 +1,244 @@
+// ignore_for_file: avoid_unnecessary_containers
+
 import 'dart:io';
 import 'package:estore/constants.dart';
+import 'package:estore/hive/hivebox.dart';
 import 'package:estore/main.dart';
-import 'package:estore/pages/products/newproduct.dart';
-import 'package:flutter/material.dart';
 import 'package:estore/pages/products/productdetails.dart';
 
-class ProductsScreen extends StatefulWidget {
-  const ProductsScreen({super.key});
+import 'package:estore/pages/products/productplus.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+// import 'package:estore/pages/products/productsDetails.dart';
+
+class ProductsPage extends StatefulWidget {
+  const ProductsPage({super.key});
 
   @override
-  State<ProductsScreen> createState() => _ProductsScreenState();
+  State<ProductsPage> createState() => _ProductsPageState();
 }
 
-class _ProductsScreenState extends State<ProductsScreen> {
+class _ProductsPageState extends State<ProductsPage> {
+  DatabaseReference ref = FirebaseDatabase.instance.ref('ldb');
+  bool ifintialloading = true;
   String? prname;
   List? products;
   bool? reFresh;
   Map? ldbs;
 
   getData() async {
-    Map ldb = await localdb.get('ldb') ?? {};
-
-    return ldb;
+    Map productsDetails = await localdb.get('productsDetails');
+    return productsDetails;
   }
 
   deleteData(key) async {
-    Map ldb = await localdb.get('ldb') ?? {};
+    Map ldb = await HiveBox().ldbGet();
     ldb.remove(key);
     await localdb.put('ldb', ldb);
     setState(() {});
   }
 
+  navigation(context) async {
+    var refresh = await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const NewProduct()));
+    setState(() {
+      reFresh = refresh;
+    });
+  }
+
+  bool activeConnection = false;
+  String T = "";
+  Future checkUserConnection() async {
+    try {
+      final result = await InternetAddress.lookup('google.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        setState(() {
+          activeConnection = true;
+          T = "Turn off the data and repress again";
+        });
+      }
+    } on SocketException catch (_) {
+      setState(() {
+        activeConnection = false;
+        T = "Turn On the data and repress again";
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: const Text('I Think Your Internet Was Off..'),
+          duration: const Duration(seconds: 12),
+          dismissDirection: DismissDirection.up,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(
+              bottom: MediaQuery.of(context).size.height - 150,
+              left: 10,
+              right: 10),
+        ),
+      );
+    }
+  }
+
   @override
   void initState() {
+    checkUserConnection();
     super.initState();
-    setState(() {});
   }
+
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.all(15),
-              child: Text(
-                'My Products',
-                style: mystyle(
-                  22,
-                ),
-              ),
-            ),
-          ),
-          const Divider(),
-          Expanded(
-            child: FutureBuilder(
-              future: getData(),
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                //
-                if (snapshot.hasData && snapshot.data.isNotEmpty) {
-                  Map snap = snapshot.data;
-                  List products = [];
-                  for (var key in snap.keys) {
-                    products.add(key);
-                  }
-
-                  products.sort();
-                  return Container(
-                      child: GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2),
-                    itemBuilder: (context, index) => Padding(
-                      padding: const EdgeInsets.all(3),
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.of(context)
-                              .push(MaterialPageRoute(
-                                  builder: (context) => ProductDetailPage(
-                                      index: index,
-                                      image: snap[products[index]]['imagedir'],
-                                      qty: snap[products[index]]['quantity'],
-                                      productname: products[index])))
-                              .then((value) {
-                            setState(() {});
-                          });
-                        },
-                        child: Column(
-                          children: [
-                            Expanded(
-                              flex: 4,
-                              child: Card(
-                                child: Column(
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: ClipRRect(
-                                        borderRadius: const BorderRadius.only(
-                                          topLeft: Radius.circular(15),
-                                        ),
-                                        child: snap[products[index]]
-                                                    ['imagedir'] !=
-                                                ''
-                                            ? Image.file(
-                                                File(snap[products[index]]
-                                                    ['imagedir']),
-                                                fit: BoxFit.fill,
-                                              )
-                                            : const Center(
-                                                child: Icon(Icons.image)),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 3),
-                                        child: Align(
-                                          alignment: Alignment.centerRight,
-                                          child: Text(
-                                            snap[products[index]]['quantity'],
-                                            overflow: TextOverflow.ellipsis,
-                                            style: mystyle(20, bold: true),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 1,
-                              child: Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 5,
-                                  top: 0,
-                                ),
-                                child: Align(
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    products[index],
-                                    overflow: TextOverflow.ellipsis,
-                                    style: mystyle(
-                                      23,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    itemCount: products.length,
-                  ));
-                } else {
-                  return progress();
-
-                  // return Align(
-                  //     alignment: Alignment.topCenter,
-                  //     child: LinearProgressIndicator());
-                }
-              },
-            ),
-          ),
-        ],
+      body: RefreshIndicator(
+        edgeOffset: 0,
+        key: _refreshIndicatorKey,
+        onRefresh: () {
+          return Future.delayed(const Duration(seconds: 3));
+        },
+        child: Column(
+          children: [
+            _title2(),
+            const Divider(),
+            _productsWidget(),
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => navigate(context),
-        child: const Icon(Icons.add),
+      floatingActionButton: fab(),
+    );
+  }
+
+  Widget _title2() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.all(15),
+        child: Text(
+          'My Products',
+          style: mystyle(
+            22,
+          ),
+        ),
       ),
     );
   }
 
-  bool ifintialloading = true;
+  Widget _productsWidget() {
+    return Expanded(
+      child: FutureBuilder(
+        future: getData(),
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          //
+          if (snapshot.hasData && snapshot.data.isNotEmpty) {
+            //
+            //
+            //
+            List products = [];
+
+            Map snap = snapshot.data;
+
+            for (var key in snap.keys) {
+              products.add(key);
+            }
+
+            products.sort();
+            return Container(
+                child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2),
+              itemBuilder: (context, index) => Padding(
+                padding: const EdgeInsets.all(3),
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context)
+                        .push(MaterialPageRoute(
+                            builder: (context) => ProductDetailPage(
+                                index: index,
+                                image: snap[products[index]]['image'],
+                                quantity: snap[products[index]]['quantity'],
+                                productname: products[index])))
+                        .then((value) {
+                      setState(() {});
+                    });
+                  },
+                  child: Column(
+                    children: [
+                      Expanded(
+                        flex: 4,
+                        child: Card(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(15),
+                                  ),
+                                  child: snap[products[index]]['image'] != false
+                                      ? Image.file(
+                                          File(
+                                              '${imagePath + products[index]}.png'),
+                                          fit: BoxFit.fill,
+                                        )
+                                      : const Center(child: Icon(Icons.image)),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 3),
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      snap[products[index]]['quantity'],
+                                      overflow: TextOverflow.ellipsis,
+                                      style: mystyle(20, bold: true),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                            left: 5,
+                            top: 0,
+                          ),
+                          child: Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              products[index],
+                              overflow: TextOverflow.ellipsis,
+                              style: mystyle(
+                                23,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              itemCount: products.length,
+            ));
+          } else {
+            return progress();
+            return const Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
+    );
+  }
+
+  // bool ifintialloading = true;
   Widget progress() {
-    loading();
+    // loading();
     return ifintialloading == true
         ? const SizedBox()
         : const Center(
@@ -190,83 +250,22 @@ class _ProductsScreenState extends State<ProductsScreen> {
               SizedBox(
                 width: 3,
               ),
-              Text('Still Product Was Not Added'),
+              Text('First add any one product and \nthen add Customers'),
             ],
           ));
   }
 
   loading() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 100));
     setState(() {
       ifintialloading = false;
     });
   }
 
-  navigate(context) async {
-    var refresh = await Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => const NewProduct()));
-    setState(() {
-      reFresh = refresh;
-    });
+  Widget fab() {
+    return FloatingActionButton(
+      onPressed: () => navigation(context),
+      child: const Icon(Icons.add),
+    );
   }
-
-  getImage() async {
-    // FirebaseStorage storage = FirebaseStorage.instance;
-    // var img = await storage.ref('images').getDownloadURL();
-    // setState(() {
-    // _imgurl = img;
-    // });
-  }
-
-  // getData() async {
-  //   DatabaseReference db = await FirebaseDatabase.instance.ref('productName');
-  //   DataSnapshot snap = await db.get();
-  //   print(snap.value);
-  //   setState(() {
-  //     prname = snap.value.toString();
-  //   });
-  // }
 }
-
-
-// Padding(
-                                            //   padding: const EdgeInsets.all(3),
-                                            //   child: Align(
-                                            //     alignment: Alignment.topRight,
-                                            //     child: CircleAvatar(
-                                            //       backgroundColor: Colors.white,
-                                            //       child: PopupMenuButton(
-                                            //         itemBuilder: (context) => [
-                                            //           PopupMenuItem(
-                                            //             onTap: () {
-                                            //               navigate(context);
-                                            //             },
-                                            //             child: const Text(
-                                            //               "Change Image",
-                                            //             ),
-                                            //           ),
-                                            //           PopupMenuItem(
-                                            //             onTap: () =>
-                                            //                 navigate(context),
-                                            //             child: const Text(
-                                            //               "Edit",
-                                            //             ),
-                                            //           ),
-                                            //           PopupMenuItem(
-                                            //             onTap: () {
-                                            //               deleteData(
-                                            //                   products[index]);
-                                            //             },
-                                            //             child: const Text(
-                                            //               'Delete',
-                                            //             ),
-                                            //           ),
-                                            //         ],
-                                            //         onSelected: (item) => {
-                                            //           // print(item)
-                                            //           //
-                                            //         },
-                                            //       ),
-                                            //     ),
-                                            //   ),
-                                            // ),

@@ -14,7 +14,7 @@ class Products {
     return {
       name: {
         'price': price,
-        'imagedir': imagedir,
+        'imagedir': imagedir.toString(),
         'quantity': quantity,
         'history': {},
       }
