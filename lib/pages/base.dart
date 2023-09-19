@@ -35,44 +35,71 @@ class _BasePageState extends State<BasePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
         title: Row(
           children: [
-            const Icon(
-              Icons.store,
-              size: 27.5,
-              // color: Colors.green,
+            // Icon(
+            //   Icons.store,
+            //   size: 33,
+            //   color: redColor,
+            // ),
+            CircleAvatar(
+              maxRadius: 14,
+              child: Image.asset('assets/logo.png'),
             ),
             const SizedBox(
               width: 5,
             ),
-            Text('Estore', style: mystyle(27.5, bold: true)),
+            Text('Estore', style: mystyle(33, bold: true, color: primaryColor)),
           ],
         ),
       ),
       bottomNavigationBar: NavigationBar(
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         onDestinationSelected: (int index) {
           onDestinationSelected(index);
         },
         selectedIndex: currentPageIndex,
-        destinations: const <Widget>[
+        destinations: <Widget>[
           //first navigation destination
           NavigationDestination(
-            selectedIcon: Icon(Icons.inventory_2_sharp),
-            icon: Icon(Icons.inventory_2_outlined),
+            selectedIcon: Icon(
+              Icons.inventory_2_sharp,
+              color: secondryColor,
+              size: 23,
+            ),
+            icon: Icon(
+              Icons.inventory_2_outlined,
+              size: 23,
+            ),
             label: 'Products',
           ),
 
           //second navigation destination
           NavigationDestination(
-            selectedIcon: Icon(Icons.group_add_rounded),
-            icon: Icon(Icons.group_add_outlined),
+            selectedIcon: Icon(
+              Icons.group_add_rounded,
+              color: secondryColor,
+              size: 23,
+            ),
+            icon: Icon(
+              Icons.group_add_outlined,
+              size: 23,
+            ),
             label: 'Customers',
           ),
 
           //third navigation destination
           NavigationDestination(
-            selectedIcon: Icon(Icons.bookmark),
-            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(
+              Icons.bookmark,
+              color: secondryColor,
+              size: 27,
+            ),
+            icon: Icon(
+              Icons.settings_outlined,
+              size: 25,
+            ),
             label: 'Profile',
           ),
         ],
@@ -137,8 +164,13 @@ class _SoonState extends State<Soon> {
             const SizedBox(height: 15),
             Text(
               DateTime.now().toString().substring(0, 16),
-              style: mystyle(24, bold: false),
+              style: Theme.of(context).textTheme.titleLarge,
             ),
+            ElevatedButton(
+                onPressed: () async {
+                  await localdb.clear();
+                },
+                child: Text('Clear'))
           ],
         ),
       ),

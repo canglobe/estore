@@ -28,6 +28,7 @@ class _ProductsPageState extends State<ProductsPage> {
 
   getData() async {
     Map productsDetails = await localdb.get('productsDetails');
+    print(productsDetails);
     return productsDetails;
   }
 
@@ -87,6 +88,10 @@ class _ProductsPageState extends State<ProductsPage> {
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
 
+  func() {
+    Navigator.pushNamed(context, '/');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,7 +99,7 @@ class _ProductsPageState extends State<ProductsPage> {
         edgeOffset: 0,
         key: _refreshIndicatorKey,
         onRefresh: () {
-          return Future.delayed(const Duration(seconds: 3));
+          return Future.delayed(const Duration(seconds: 3), func());
         },
         child: Column(
           children: [
@@ -112,12 +117,14 @@ class _ProductsPageState extends State<ProductsPage> {
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.only(left: 20),
         child: Text(
           'My Products',
-          style: mystyle(
-            22,
-          ),
+          style: Theme.of(context).textTheme.displaySmall,
+          // mystyle(
+          //   20,
+          //   color: ,
+          // ),
         ),
       ),
     );
@@ -142,94 +149,101 @@ class _ProductsPageState extends State<ProductsPage> {
             }
 
             products.sort();
-            return Container(
-                child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2),
-              itemBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.all(3),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context)
-                        .push(MaterialPageRoute(
-                            builder: (context) => ProductDetailPage(
-                                index: index,
-                                image: snap[products[index]]['image'],
-                                quantity: snap[products[index]]['quantity'],
-                                productname: products[index])))
-                        .then((value) {
-                      setState(() {});
-                    });
-                  },
-                  child: Column(
-                    children: [
-                      Expanded(
-                        flex: 4,
-                        child: Card(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(
-                                flex: 3,
-                                child: ClipRRect(
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(15),
+            return Padding(
+              padding: const EdgeInsets.all(9),
+              child: Container(
+                  child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2),
+                itemBuilder: (context, index) => Padding(
+                  padding: const EdgeInsets.all(4.5),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context)
+                          .push(MaterialPageRoute(
+                              builder: (context) => ProductDetailPage(
+                                  index: index,
+                                  price: snap[products[index]]['price'],
+                                  image: snap[products[index]]['image'],
+                                  quantity: snap[products[index]]['quantity'],
+                                  productname: products[index])))
+                          .then((value) {
+                        setState(() {});
+                      });
+                    },
+                    child: Column(
+                      children: [
+                        // Padding(padding: EdgeInsets.only(top: 5)),
+                        Expanded(
+                          flex: 4,
+                          child: Card(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: ClipRRect(
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(15),
+                                    ),
+                                    child:
+                                        snap[products[index]]['image'] != false
+                                            ? Image.file(
+                                                File(
+                                                    '${imagePath + products[index]}.png'),
+                                                fit: BoxFit.fill,
+                                              )
+                                            : const Center(
+                                                child: Icon(Icons.image)),
                                   ),
-                                  child: snap[products[index]]['image'] != false
-                                      ? Image.file(
-                                          File(
-                                              '${imagePath + products[index]}.png'),
-                                          fit: BoxFit.fill,
-                                        )
-                                      : const Center(child: Icon(Icons.image)),
                                 ),
-                              ),
-                              Expanded(
-                                flex: 1,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 3),
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      snap[products[index]]['quantity'],
-                                      overflow: TextOverflow.ellipsis,
-                                      style: mystyle(20, bold: true),
+                                Expanded(
+                                  flex: 1,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 5),
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Text(
+                                        snap[products[index]]['quantity']
+                                            .toString(),
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .displayLarge,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                            left: 5,
-                            top: 0,
-                          ),
-                          child: Align(
-                            alignment: Alignment.center,
-                            child: Text(
-                              products[index],
-                              overflow: TextOverflow.ellipsis,
-                              style: mystyle(
-                                23,
+                        Expanded(
+                          flex: 1,
+                          child: Card(
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 5),
+                                child: Text(
+                                  products[index].toString(),
+                                  overflow: TextOverflow.ellipsis,
+                                  style:
+                                      Theme.of(context).textTheme.displayMedium,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              itemCount: products.length,
-            ));
+                itemCount: products.length,
+              )),
+            );
           } else {
             return progress();
-            return const Center(child: CircularProgressIndicator());
           }
         },
       ),

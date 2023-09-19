@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:estore/constants.dart';
 import 'package:estore/main.dart';
+import 'package:estore/pages/products/productedit.dart';
 import 'package:estore/utils/size.dart';
 import 'package:estore/widgets/widgets.dart';
 
@@ -10,6 +11,7 @@ import 'package:flutter/material.dart';
 class ProductDetailPage extends StatefulWidget {
   final int index;
   final bool image;
+  final String price;
   final String quantity;
   final String productname;
 
@@ -19,6 +21,7 @@ class ProductDetailPage extends StatefulWidget {
     required this.image,
     required this.quantity,
     required this.productname,
+    required this.price,
   });
 
   @override
@@ -41,6 +44,31 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     var productsHistory = await localdb.get('productsHistory') ?? {};
 
     return productsHistory[widget.productname];
+  }
+
+  removeData(index, keys, snap) async {
+    print('remove');
+    Map productsHistory = await localdb.get('productsHistory') ?? {};
+    print(productsHistory);
+    var personsHistory = await localdb.get('personsHistory') ?? {};
+
+    print(personsHistory);
+
+    Map history = productsHistory[widget.productname];
+    print(history);
+    var person = history[keys[index]]['person'];
+    print(person);
+    Map history1 = personsHistory[person];
+    history1.remove(keys[index]);
+    history.remove(keys[index]);
+    print(history);
+    print(history1);
+    personsHistory[person] = history1;
+    productsHistory[widget.productname] = history;
+    print(productsHistory);
+    await localdb.put('productsHistory', productsHistory);
+    await localdb.put('personsHistory', personsHistory);
+    snap.remove(keys[index]);
   }
 
   getQuantity(productname) async {
@@ -125,13 +153,26 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       appBar: AppBar(
         title: Text(
           widget.productname,
-          style: mystyle(25, bold: true),
+          // style: mystyle(25, bold: true),
         ),
         actions: [
           //
           TextButton(
-            onPressed: () {},
-            child: const Text('Edit'),
+            onPressed: () async {
+              var refresh = await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => ProductEdit(
+                        productname: widget.productname,
+                        price: widget.price,
+                        quantity: widget.quantity,
+                        image: widget.image,
+                      )));
+
+              setState(() {});
+            },
+            child: Text(
+              'Edit',
+              style: Theme.of(context).textTheme.displaySmall,
+            ),
           ),
         ],
       ),
@@ -179,10 +220,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     return snapshot.hasData
                         ? Text(
                             snapshot.data.toString(),
-                            style: mystyle(
-                              36,
-                              bold: true,
-                            ),
+                            style: Theme.of(context).textTheme.displayMedium,
                           )
                         : const SizedBox();
                   }),
@@ -192,7 +230,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     priceController.text =
                         await localdb.get('productsDetails')[widget.productname]
                                 ['price'] ??
-                            {};
+                            '';
 
                     setState(() {
                       ifsell = true;
@@ -200,7 +238,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   },
                   child: Text(
                     'Sell',
-                    style: mystyle(20),
+                    style: Theme.of(context).textTheme.titleLarge,
                   ))
             ],
           ),
@@ -285,19 +323,31 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             const SizedBox(
               height: 75,
             ),
-            myButton(
-                onPressed: () async {
-                  if (nameController.text.isNotEmpty) {
-                    save();
-                    setState(() {
-                      //
-                    });
-                  } else {}
-                },
-                child: myText(
-                  text: 'Sell',
-                  size: 20.0,
-                ))
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                myButton(
+                    onPressed: () async {
+                      setState(() {
+                        ifsell = false;
+                      });
+                    },
+                    child: myText(
+                      text: 'Back',
+                      size: 20.0,
+                    )),
+                myButton(
+                    onPressed: () async {
+                      if (nameController.text.isNotEmpty) {
+                        save();
+                      } else {}
+                    },
+                    child: myText(
+                      text: 'Sell',
+                      size: 20.0,
+                    )),
+              ],
+            )
           ],
         ),
       ),
@@ -318,8 +368,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             List keys = [];
             Map snap = snapshot.data;
 
-            for (var x in snap.keys) {
+            // snap.forEach((key, value) {
+            //   keys.contains(key) ? print(key) : keys.add(key);
+            // });
+
+            for (String x in snap.keys) {
               keys.add(x);
+              if (keys.contains(x)) {
+                //
+              } else {
+                keys.add(x);
+              }
             }
             keys.sort();
             keys = keys.reversed.toList();
@@ -327,37 +386,25 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             return ListView.builder(
               itemBuilder: (context, index) {
                 return Card(
-                  elevation: 20,
-                  child: GestureDetector(
-                    onTap: () {
-                      // snap.remove(keys[index]);
-                      // var ldb = localdb.get('ldb') ?? {};
-                      // ldb[widget.productname]['history'] = snap;
-                      // setState(() {});
+                  elevation: 9,
+                  child: Dismissible(
+                    key: ValueKey(keys[index]),
+                    onDismissed: (direction) async {
+                      //
+                      removeData(index, keys, snap);
                     },
                     child: ListTile(
                       trailing: Text(
-                        snap[keys[index]]['person'],
-                        style: mystyle(20, bold: true),
+                        '${snap[keys[index]]['person']} ( ${snap[keys[index]]['quantity']} )',
+                        style: Theme.of(context).textTheme.displaySmall,
                       ),
                       leading: SizedBox(
                         width: ScreenSize(context, false, 45),
                         child: Row(
                           children: [
                             Text(
-                              keys[index].toString().substring(0, 10),
-                              style: mystyle(20, bold: true),
-                            ),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            const Text('/'),
-                            const SizedBox(
-                              width: 5,
-                            ),
-                            Text(
-                              snap[keys[index]]['quantity'],
-                              style: mystyle(23),
+                              keys[index].toString().substring(0, 16),
+                              style: Theme.of(context).textTheme.displaySmall,
                             ),
                           ],
                         ),

@@ -29,9 +29,16 @@ List<String> cunames = <String>[
   'person 5',
 ];
 
-TextStyle mystyle(double size, {bool bold = false}) {
+TextStyle mystyle(double size,
+    {bool bold = false, Color color = Colors.black}) {
   return TextStyle(
-    fontSize: size,
-    fontWeight: bold != true ? FontWeight.normal : FontWeight.bold,
-  );
+      fontSize: size,
+      fontWeight: bold != true ? FontWeight.normal : FontWeight.bold,
+      color: color);
 }
+
+Color primaryColor = Color.fromARGB(255, 224, 190, 125);
+Color secondryColor = Color.fromARGB(255, 10, 36, 42);
+Color greenColor = const Color(0xff8ad979);
+Color skyblueColor = const Color(0xff5bcfc9);
+Color orangeColor = const Color(0xfffa9f43);

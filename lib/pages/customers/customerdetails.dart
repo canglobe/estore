@@ -92,8 +92,32 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
   getData() async {
     Map personsHistory = await localdb.get('personsHistory') ?? {};
+    print(personsHistory);
+    print(widget.person);
 
     return personsHistory;
+  }
+
+  removeData(index, keys, snap) async {
+    Map productsHistory = await localdb.get('productsHistory') ?? {};
+
+    var personsHistory = await localdb.get('personsHistory') ?? {};
+
+    Map history = personsHistory[widget.person];
+
+    var product = history[keys[index]]['product'];
+
+    Map historypr = productsHistory[product];
+    historypr.remove(keys[index]);
+    history.remove(keys[index]);
+    ;
+
+    productsHistory[product] = historypr;
+    personsHistory[widget.person] = history;
+
+    await localdb.put('productsHistory', productsHistory);
+    await localdb.put('personsHistory', personsHistory);
+    snap.remove(keys[index]);
   }
 
   var numbers = [
@@ -165,8 +189,19 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          actions: const [
+          actions: [
             //
+            IconButton(
+                onPressed: () async {
+                  //
+                  List personsNames = await localdb.get('personsNames') ?? {};
+                  print(personsNames);
+                  personsNames.remove(widget.person);
+
+                  await localdb.put('personsNames', personsNames);
+                  Navigator.pushNamedAndRemoveUntil(context, '/', (c) => false);
+                },
+                icon: Icon(Icons.delete_forever_outlined))
           ],
         ),
         body: Column(
@@ -186,7 +221,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       children: [
         Text(
           widget.person,
-          style: mystyle(24),
+          style: Theme.of(context).textTheme.displayMedium,
         ),
         myButton(
             onPressed: () {
@@ -196,7 +231,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             },
             child: Text(
               'Sell',
-              style: mystyle(20),
+              style: Theme.of(context).textTheme.displaySmall,
             ))
       ],
     );
@@ -224,7 +259,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       )
                     : Text(
                         'Product Name',
-                        style: mystyle(20),
+                        style: Theme.of(context).textTheme.displaySmall,
                       ),
                 dropdownMenuEntries:
                     products!.map<DropdownMenuEntry<String>>((value) {
@@ -252,7 +287,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                 initialSelection: numbers[0],
                 label: Text(
                   'Quantity',
-                  style: mystyle(20),
+                  style: Theme.of(context).textTheme.displaySmall,
                 ),
                 dropdownMenuEntries: numbers.map((e) {
                   return DropdownMenuEntry(value: e, label: e);
@@ -274,18 +309,32 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         const SizedBox(
           height: 45,
         ),
-        myButton(
-            onPressed: () {
-              // sellboxshow(context);
-              save();
-              setState(() {
-                ifselling = false;
-              });
-            },
-            child: Text(
-              'Sell',
-              style: mystyle(20),
-            ))
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            myButton(
+                onPressed: () {
+                  setState(() {
+                    ifselling = false;
+                  });
+                },
+                child: Text(
+                  'Back',
+                  style: Theme.of(context).textTheme.displaySmall,
+                )),
+            myButton(
+                onPressed: () {
+                  save();
+                  setState(() {
+                    ifselling = false;
+                  });
+                },
+                child: Text(
+                  'Sell',
+                  style: Theme.of(context).textTheme.displaySmall,
+                )),
+          ],
+        )
       ],
     );
   }
@@ -295,7 +344,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       child: FutureBuilder(
         future: getData(),
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.hasData && snapshot.data.isNotEmpty) {
+          print(snapshot.data);
+          if (snapshot.hasData &&
+              snapshot.data.isNotEmpty &&
+              snapshot.data != null) {
             List keys = [];
             Map snap = snapshot.data[widget.person];
 
@@ -310,33 +362,29 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             return ListView.builder(
               itemBuilder: (context, index) {
                 return Card(
-                  child: ListTile(
-                    isThreeLine: true,
-                    trailing: Text(
-                      snap[keys[index]]['product'],
-                      style: mystyle(20, bold: true),
-                    ),
-                    subtitle: const SizedBox(),
-                    leading: SizedBox(
-                      width: ScreenSize(context, false, 45),
-                      child: Row(
-                        children: [
-                          Text(
-                            keys[index].toString().substring(0, 10),
-                            style: mystyle(20, bold: true),
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          const Text('/'),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          Text(
-                            snap[keys[index]]['quantity'],
-                            style: mystyle(23),
-                          ),
-                        ],
+                  elevation: 9,
+                  child: Dismissible(
+                    key: ValueKey(keys[index]),
+                    onDismissed: (direction) {
+                      removeData(index, keys, snap);
+                    },
+                    child: ListTile(
+                      // isThreeLine: true,
+                      // trailing: Text(
+                      //   snap[keys[index]]['product'].toString(),
+                      //   style: Theme.of(context).textTheme.displaySmall,
+                      // ),
+                      trailing: Text(
+                        '${snap[keys[index]]['product']} ( ${snap[keys[index]]['quantity']} )',
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      // subtitle: const SizedBox(),
+                      leading: SizedBox(
+                        width: ScreenSize(context, false, 45),
+                        child: Text(
+                          keys[index].toString().substring(0, 16),
+                          style: Theme.of(context).textTheme.displaySmall,
+                        ),
                       ),
                     ),
                   ),
@@ -345,7 +393,18 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
               itemCount: keys.length,
             );
           } else {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(
+                child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Icons.info),
+                SizedBox(
+                  width: 3,
+                ),
+                Text('Still Product Was Not Sell'),
+              ],
+            ));
           }
         },
       ),

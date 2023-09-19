@@ -1,3 +1,7 @@
+import 'package:estore/constants.dart';
+import 'package:estore/pages/customers/customers.dart';
+import 'package:estore/pages/products/productdetails.dart';
+import 'package:estore/pages/products/products.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -36,16 +40,35 @@ class _MymaterialAppState extends State<MymaterialApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        primaryColor: primaryColor,
+        primaryColorDark: primaryColor,
+        primaryColorLight: primaryColor,
+        // colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.green),
+        brightness: Brightness.light,
+        textTheme: TextTheme(
+            displayLarge: TextStyle(color: secondryColor, fontSize: 23),
+            displayMedium: TextStyle(color: secondryColor, fontSize: 20),
+            displaySmall: TextStyle(color: secondryColor, fontSize: 18)),
       ),
-      darkTheme: ThemeData.dark(
-          // useMaterial3: true,
-          ),
+      darkTheme: ThemeData(
+        // useMaterial3: true,
+        brightness: Brightness.dark,
+        textTheme: TextTheme(
+            displayLarge: TextStyle(color: Colors.white, fontSize: 23),
+            displayMedium: TextStyle(color: Colors.white, fontSize: 20),
+            displaySmall: TextStyle(color: Colors.white, fontSize: 18)),
+      ),
       themeMode: themeMode,
-      home: const Scaffold(
-        body: BasePage(),
-      ),
+      // home: const Scaffold(
+      //   body: BasePage(),
+      // ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => BasePage(),
+        '/persons': (context) => CustomersScreen(),
+        '/soon': (context) => Soon(),
+      },
     );
   }
 

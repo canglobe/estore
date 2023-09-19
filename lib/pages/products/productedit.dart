@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:estore/constants.dart';
 
 import 'package:estore/main.dart';
@@ -12,22 +14,34 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:image/image.dart' as im;
 
-class NewProduct extends StatefulWidget {
-  const NewProduct({super.key});
+class ProductEdit extends StatefulWidget {
+  // final int index;
+  final bool image;
+  final String price;
+  final String quantity;
+  final String productname;
+
+  ProductEdit(
+      {super.key,
+      required this.productname,
+      required this.price,
+      required this.quantity,
+      required this.image});
 
   @override
-  State<NewProduct> createState() => _NewProductState();
+  State<ProductEdit> createState() => _ProductEditState();
 }
 
-class _NewProductState extends State<NewProduct> {
+class _ProductEditState extends State<ProductEdit> {
   final nameController = TextEditingController();
   final priceController = TextEditingController();
   final quantityController = TextEditingController();
 
   DatabaseReference ref = FirebaseDatabase.instance.ref();
 
-  io.File? image;
+  io.File? imageUpdate;
   bool? isLoading;
+  bool? image;
 
   String err = '';
 
@@ -46,7 +60,7 @@ class _NewProductState extends State<NewProduct> {
     });
 
     bool haveImage = image != null ? true : false;
-    haveImage != false ? saveImage(io.File(image!.path)) : () {};
+    haveImage != false ? saveImage(io.File(imageUpdate!.path)) : () {};
     Map productsDetails = await localdb.get('productsDetails') ?? {};
     List productsNames = await localdb.get('productsNames') ?? [];
 
@@ -68,7 +82,7 @@ class _NewProductState extends State<NewProduct> {
   }
 
   navigation() {
-    Navigator.pop(context);
+    Navigator.pop(context, true);
   }
 
   throwError() {
@@ -85,7 +99,7 @@ class _NewProductState extends State<NewProduct> {
     io.File file = io.File(img!.path);
 
     setState(() {
-      image = file;
+      imageUpdate = file;
     });
   }
 
@@ -97,7 +111,7 @@ class _NewProductState extends State<NewProduct> {
     io.File file = io.File(img!.path);
 
     setState(() {
-      image = file;
+      imageUpdate = file;
     });
   }
 
@@ -118,13 +132,37 @@ class _NewProductState extends State<NewProduct> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    image = widget.image;
+    nameController.text = widget.productname;
+    quantityController.text = widget.quantity;
+    priceController.text = widget.price;
+    imageUpdate = File('${imagePath + widget.productname}.png');
+
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Product Plus',
-          style: mystyle(24, bold: true),
+          'Edit',
+          style: Theme.of(context).textTheme.displaySmall,
         ),
+        actions: [
+          IconButton(
+              onPressed: () async {
+                Map productsHistory =
+                    await localdb.get('productsDetails') ?? {};
+                print(productsHistory);
+                productsHistory.remove(widget.productname);
+                await localdb.put('productsDetails', productsHistory);
+                Navigator.pushNamedAndRemoveUntil(context, '/', (c) => false);
+              },
+              icon: Icon(Icons.delete_forever_outlined))
+        ],
       ),
       body: bodyContent(context),
     );
@@ -142,7 +180,7 @@ class _NewProductState extends State<NewProduct> {
             _errorCard(),
             const Divider(),
             isLoading != false
-                ? image != null
+                ? image != null && image != false
                     ? _imageCard()
                     : Text(err)
                 : const CircularProgressIndicator(),
@@ -179,7 +217,7 @@ class _NewProductState extends State<NewProduct> {
         child: Card(
             elevation: 20,
             child: Image.file(
-              io.File(image!.path),
+              File('${imagePath + widget.productname}.png'),
               fit: BoxFit.fill,
             )));
   }
@@ -210,7 +248,10 @@ class _NewProductState extends State<NewProduct> {
                   onPressed: () {
                     pickImageCamera();
                   },
-                  child: const Text('Camera'),
+                  child: Text(
+                    'Camera',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
                 ),
               ),
               SizedBox(
@@ -220,7 +261,10 @@ class _NewProductState extends State<NewProduct> {
                   onPressed: () {
                     pickImageGallery();
                   },
-                  child: const Text('Gallery'),
+                  child: Text(
+                    'Gallery',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
                 ),
               ),
             ],
@@ -244,8 +288,8 @@ class _NewProductState extends State<NewProduct> {
               height: 5,
             ),
             Text(
-              'Enter Correct Details',
-              style: mystyle(24, bold: true),
+              'Update Correct Details',
+              style: Theme.of(context).textTheme.displayMedium,
             ),
             const SizedBox(
               height: 25,

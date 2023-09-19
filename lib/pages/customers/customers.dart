@@ -73,11 +73,17 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
   void newCustomer() async {
     //
-    if (nameController.text.isNotEmpty) {
-      List personNames = await localdb.get('personsNames') ?? [];
+    List personNames = await localdb.get('personsNames') ?? [];
+    Map personsHistory = await localdb.get('personsHistory') ?? {};
+    bool ifExist = !personNames.contains(nameController.text);
+    if (nameController.text.isNotEmpty && ifExist) {
       personNames.add(nameController.text);
+      Map data = {nameController.text: {}};
 
       await localdb.put('personsNames', personNames);
+      await localdb.put('personsHistory', personsHistory);
+      nameController.text = '';
+      nameController.text = '';
       navigation();
 
       setState(() {});
@@ -112,12 +118,10 @@ class _CustomersScreenState extends State<CustomersScreen> {
         Align(
           alignment: Alignment.centerLeft,
           child: Padding(
-            padding: const EdgeInsets.all(15),
+            padding: const EdgeInsets.only(left: 20),
             child: Text(
               'My Customers',
-              style: mystyle(
-                22,
-              ),
+              style: Theme.of(context).textTheme.displaySmall,
             ),
           ),
         ),
@@ -143,25 +147,26 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                     person: person,
                                   )));
                         },
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: colorslist[Random().nextInt(7)],
-                            child: Text(
+                        child: Padding(
+                          padding: const EdgeInsets.all(5),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: colorslist[Random().nextInt(7)],
+                              child: Text(
                                 snap[index]
                                     .toString()
                                     .substring(0, 1)
                                     .toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                )),
+                                style:
+                                    Theme.of(context).textTheme.displayMedium,
+                              ),
+                            ),
+                            title: Text(
+                              snap[index].toString().toUpperCase(),
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
                           ),
-                          title: Text(
-                            snap[index],
-                            style: mystyle(20, bold: true),
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
                         ),
                       ),
                     );
