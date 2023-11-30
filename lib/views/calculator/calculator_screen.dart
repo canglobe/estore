@@ -1,0 +1,233 @@
+import 'package:flutter/material.dart';
+import 'package:math_expressions/math_expressions.dart';
+
+class Calculator extends StatefulWidget {
+  const Calculator({super.key});
+
+  @override
+  State<Calculator> createState() => _CalculatorState();
+}
+
+class _CalculatorState extends State<Calculator> {
+  var userInput = '';
+  var answer = '';
+
+// Array of button
+  List<String> buttons = [
+    '0',
+    '.',
+    '=',
+    ' + ',
+    '1',
+    '2',
+    '3',
+    ' - ',
+    '4',
+    '5',
+    '6',
+    ' x ',
+    '7',
+    '8',
+    '9',
+    ' / ',
+    'C',
+    '+/-',
+    '%',
+    'DEL',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white54,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget>[
+          Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.only(top: 5, bottom: 5, right: 10),
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    userInput,
+                    style: const TextStyle(fontSize: 20, color: Colors.black),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(9),
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    answer,
+                    style: Theme.of(context).textTheme.headlineLarge,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              ]),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(3),
+              child: GridView.builder(
+                  reverse: true,
+                  itemCount: buttons.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4),
+                  itemBuilder: (BuildContext context, int index) {
+                    // Clear Button
+                    if (index == 16) {
+                      return MyButton(
+                        buttontapped: () {
+                          setState(() {
+                            userInput = '';
+                            answer = '0';
+                          });
+                        },
+                        buttonText: buttons[index],
+                        color: Colors.blue[50],
+                        textColor: Colors.black,
+                      );
+                    }
+
+                    // +/- button
+                    else if (index == 17) {
+                      return MyButton(
+                        buttonText: buttons[index],
+                        color: Colors.blue[50],
+                        textColor: Colors.black,
+                      );
+                    }
+                    // % Button
+                    else if (index == 18) {
+                      return MyButton(
+                        buttontapped: () {
+                          setState(() {
+                            userInput += buttons[index];
+                          });
+                        },
+                        buttonText: buttons[index],
+                        color: Colors.blue[50],
+                        textColor: Colors.black,
+                      );
+                    }
+                    // Delete Button
+                    else if (index == 19) {
+                      return MyButton(
+                        buttontapped: () {
+                          setState(() {
+                            userInput =
+                                userInput.substring(0, userInput.length - 1);
+                          });
+                        },
+                        buttonText: buttons[index],
+                        color: Colors.blue[50],
+                        textColor: Colors.black,
+                      );
+                    }
+                    // Equal_to Button
+                    else if (index == 2) {
+                      return MyButton(
+                        buttontapped: () {
+                          setState(() {
+                            equalPressed();
+                          });
+                        },
+                        buttonText: buttons[index],
+                        color: Colors.orange[700],
+                        textColor: Colors.white,
+                      );
+                    }
+
+                    // other buttons
+                    else {
+                      return MyButton(
+                        buttontapped: () {
+                          setState(() {
+                            userInput += buttons[index];
+                          });
+                        },
+                        buttonText: buttons[index],
+                        color: isOperator(buttons[index])
+                            ? Colors.blueAccent
+                            : Colors.white,
+                        textColor: isOperator(buttons[index])
+                            ? Colors.white
+                            : Colors.black,
+                      );
+                    }
+                  }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool isOperator(String x) {
+    if (x == ' / ' || x == ' x ' || x == ' - ' || x == ' + ' || x == '=') {
+      return true;
+    }
+    return false;
+  }
+
+// function to calculate the input operation
+  void equalPressed() {
+    try {
+      String finaluserinput = userInput;
+      finaluserinput = userInput.replaceAll('x', '*');
+
+      Parser p = Parser();
+      Expression exp = p.parse(finaluserinput);
+      ContextModel cm = ContextModel();
+      double eval = exp.evaluate(EvaluationType.REAL, cm);
+      answer = eval.toString();
+    } catch (e) {
+      answer = e.toString();
+    }
+  }
+}
+
+// creating Stateless Widget for buttons
+class MyButton extends StatelessWidget {
+// declaring variables
+  final color;
+  final textColor;
+  final String buttonText;
+  final buttontapped;
+
+//Constructor
+  const MyButton(
+      {super.key,
+      this.color,
+      this.textColor,
+      required this.buttonText,
+      this.buttontapped});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 1,
+      child: GestureDetector(
+        onTap: buttontapped,
+        child: Padding(
+          padding: const EdgeInsets.all(0.2),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(25),
+            child: Container(
+              color: color,
+              child: Center(
+                child: Text(
+                  buttonText,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 25.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

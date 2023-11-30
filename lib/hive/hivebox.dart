@@ -1,24 +1,49 @@
 import 'package:estore/main.dart';
 
-class HiveBox {
-  ldbGet() async {
-    var ldb = await localdb.get('ldb') ?? {};
+class HiveDB {
+  getProductNames() async {
+    List data = await localdb.get('productNames') ?? [];
 
-    return ldb;
+    return data;
   }
 
-  ldbPut(onlineldb) async {
-    await localdb.put('ldb', onlineldb);
+  putProductNames(data) async {
+    await localdb.put('productNames', data);
   }
 
-  ldbccGet() async {
-    Map ldbcc = await localdb.get('ldbcc') ?? {};
-    return ldbcc;
+  getProductHistory() async {
+    Map data = await localdb.get('productHistory') ?? {};
+    return data;
   }
 
-  ldbccPut(onlinedb) async {
-    await localdb.put('ldbcc', onlinedb);
+  putProductHistory(data) async {
+    await localdb.put('productHistory', data);
   }
 
-  updateImage() {}
+  getProductDetails() async {
+    Map data = await localdb.get('productDetails') ?? {};
+    return data;
+  }
+
+  putProductDetails(data) async {
+    await localdb.put('productDetails', data);
+  }
+
+// ----------------------------------------------------person
+  getPersonsHistory() async {
+    Map data = await localdb.get('personsHistory') ?? {};
+    return data;
+  }
+
+  putPersonsHistory(data) async {
+    await localdb.put('personsHistory', data);
+  }
+
+  getPersonsNames() async {
+    List data = await localdb.get('personsNames') ?? [];
+
+    return data;
+  }
+
+// ------------------------------------------------------
 }
