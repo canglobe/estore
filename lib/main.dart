@@ -1,7 +1,7 @@
 import 'package:estore/views/calculator/calculator_screen.dart';
 import 'package:estore/views/customers/customers.dart';
 import 'package:estore/views/splash.dart';
-import 'package:estore/utils/appdata.dart';
+import 'package:estore/utils/themedata.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';

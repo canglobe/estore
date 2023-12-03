@@ -39,10 +39,10 @@ TextStyle mystyle(double size,
 }
 
 // Main Colors
-Color primaryColor = const Color.fromARGB(255, 0, 189, 213);
-Color secondryColor = const Color.fromARGB(255, 33, 150, 243);
+const primaryColor = Color.fromARGB(255, 0, 189, 213);
+const secondryColor = Color.fromARGB(255, 33, 150, 243);
 const bgColor = Color.fromARGB(255, 239, 250, 252);
-Color txtColor = const Color.fromARGB(255, 33, 33, 33);
+const txtColor = Color.fromARGB(255, 33, 33, 33);
 const whitecolor = Colors.white;
 
 // Text Colors Light Theme
@@ -54,9 +54,9 @@ const miniTextColor = Color.fromARGB(255, 77, 77, 77);
 const textDarkColor = Color.fromARGB(255, 247, 245, 245);
 
 // Additional Color Pallete
-Color greenColor = const Color(0xff8ad979);
-Color skyblueColor = const Color(0xff5bcfc9);
-Color orangeColor = const Color(0xfffa9f43);
+const greenColor = Color(0xff8ad979);
+const skyblueColor = Color(0xff5bcfc9);
+const orangeColor = Color(0xfffa9f43);
 
 // Object for hive database
 HiveDB hiveDb = HiveDB();

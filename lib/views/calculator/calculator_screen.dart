@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:math_expressions/math_expressions.dart';
+import 'package:flutter/services.dart';
 
 class Calculator extends StatefulWidget {
   const Calculator({super.key});
@@ -51,7 +52,7 @@ class _CalculatorState extends State<Calculator> {
                   alignment: Alignment.centerRight,
                   child: Text(
                     userInput,
-                    style: const TextStyle(fontSize: 20, color: Colors.black),
+                    style: const TextStyle(fontSize: 22, color: Colors.black),
                   ),
                 ),
                 Container(
@@ -77,6 +78,7 @@ class _CalculatorState extends State<Calculator> {
                     if (index == 16) {
                       return MyButton(
                         buttontapped: () {
+                          SystemSound.play(SystemSoundType.click);
                           setState(() {
                             userInput = '';
                             answer = '0';
@@ -100,6 +102,8 @@ class _CalculatorState extends State<Calculator> {
                     else if (index == 18) {
                       return MyButton(
                         buttontapped: () {
+                          SystemSound.play(SystemSoundType.click);
+
                           setState(() {
                             userInput += buttons[index];
                           });
@@ -113,6 +117,7 @@ class _CalculatorState extends State<Calculator> {
                     else if (index == 19) {
                       return MyButton(
                         buttontapped: () {
+                          SystemSound.play(SystemSoundType.click);
                           setState(() {
                             userInput =
                                 userInput.substring(0, userInput.length - 1);
@@ -127,6 +132,7 @@ class _CalculatorState extends State<Calculator> {
                     else if (index == 2) {
                       return MyButton(
                         buttontapped: () {
+                          SystemSound.play(SystemSoundType.click);
                           setState(() {
                             equalPressed();
                           });
@@ -141,6 +147,7 @@ class _CalculatorState extends State<Calculator> {
                     else {
                       return MyButton(
                         buttontapped: () {
+                          SystemSound.play(SystemSoundType.click);
                           setState(() {
                             userInput += buttons[index];
                           });

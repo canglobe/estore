@@ -314,7 +314,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               children: [
                                 Text(
                                   ' $key',
-                                  style: Theme.of(context).textTheme.labelLarge,
+                                  style:
+                                      Theme.of(context).textTheme.displaySmall,
                                 ),
                                 const SizedBox(
                                   height: 14,
@@ -489,11 +490,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       }).toList(),
                       onSelected: (value) {
                         setState(() {
-                          //
                           selectedQuantity = value!;
                           quantityController.text = selectedQuantity;
                         });
                       },
+                      textStyle: Theme.of(context).textTheme.displaySmall,
                     ),
                   ),
                 ],

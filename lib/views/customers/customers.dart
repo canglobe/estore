@@ -169,7 +169,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                               ),
                               title: Text(
                                 snap[index].toString().toUpperCase(),
-                                style: Theme.of(context).textTheme.labelLarge,
+                                style: Theme.of(context).textTheme.displaySmall,
                               ),
                               trailing: IconButton(
                                   onPressed: () {
