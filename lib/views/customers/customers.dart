@@ -200,7 +200,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
   _fab() {
     return FloatingActionButton.extended(
-      onPressed: _showDialog(),
+      onPressed: () {
+        _showDialog();
+      },
       label: const Icon(Icons.add),
     );
   }

@@ -69,7 +69,7 @@ class _Ept1AppState extends State<Ept1App> {
       routes: {
         '/': (context) => const SplashScreen(),
         '/base': (context) => const BaseScreen(),
-        '/persons': (context) => const CustomersScreen(),
+        '/customers': (context) => const CustomersScreen(),
         '/calculator': (context) => const Calculator(),
       },
     );

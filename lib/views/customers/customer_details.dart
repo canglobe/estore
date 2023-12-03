@@ -1,15 +1,16 @@
 import 'package:estore/constants/constants.dart';
 import 'package:estore/main.dart';
 import 'package:estore/utils/size.dart';
+import 'package:estore/views/base.dart';
 import 'package:estore/widgets/widgets.dart';
 
 import 'package:flutter/material.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
   final String person;
-  late bool ifsell;
+  final bool ifsell;
 
-  CustomerDetailsScreen({
+  const CustomerDetailsScreen({
     super.key,
     required this.person,
     required this.ifsell,
@@ -26,6 +27,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   List? products;
   String? selectedproduct;
   List<String> numbers = ['1', '2', '3', '4', '5'];
+  bool? ifsell;
 
   getData() async {
     Map personsHistory = await localdb.get('personsHistory') ?? {};
@@ -43,7 +45,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     );
     setState(() {
       products = productNames;
-      selectedproduct = productNames[0];
+      selectedproduct = productNames.isNotEmpty ? productNames[0] : '';
     });
   }
 
@@ -123,6 +125,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   @override
   void initState() {
     productsList();
+    ifsell = widget.ifsell;
     super.initState();
   }
 
@@ -175,7 +178,11 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       body: Column(
         children: [
           const SizedBox(height: 15),
-          widget.ifsell != true ? _sellHistory() : _sell(context),
+          widget.ifsell != true
+              ? _sellHistory()
+              : products!.isNotEmpty
+                  ? _sell(context)
+                  : _addProduct(),
         ],
       ),
       floatingActionButton: _fab(context),
@@ -255,7 +262,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             myButton(
                 onPressed: () {
                   setState(() {
-                    widget.ifsell = false;
+                    ifsell = false;
                   });
                 },
                 child: Text(
@@ -266,7 +273,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                 onPressed: () {
                   save();
                   setState(() {
-                    widget.ifsell = false;
+                    ifsell = false;
                   });
                 },
                 child: Text(
@@ -276,6 +283,17 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
           ],
         )
       ],
+    );
+  }
+
+  _addProduct() {
+    return Center(
+      child: TextButton(
+          onPressed: () {
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => BaseScreen()));
+          },
+          child: Text('First add any one of product')),
     );
   }
 
@@ -398,7 +416,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         ? FloatingActionButton.extended(
             onPressed: () async {
               setState(() {
-                widget.ifsell = true;
+                ifsell = true;
               });
             },
             label: Text(
