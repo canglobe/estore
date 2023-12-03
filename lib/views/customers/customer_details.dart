@@ -178,7 +178,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       body: Column(
         children: [
           const SizedBox(height: 15),
-          widget.ifsell != true
+          ifsell != true
               ? _sellHistory()
               : products!.isNotEmpty
                   ? _sell(context)
@@ -412,7 +412,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   }
 
   _fab(context) {
-    return widget.ifsell != true
+    return ifsell != true
         ? FloatingActionButton.extended(
             onPressed: () async {
               setState(() {
