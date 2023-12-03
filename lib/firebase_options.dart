@@ -69,7 +69,8 @@ class DefaultFirebaseOptions {
     projectId: 'estore-ept5',
     databaseURL: 'https://estore-ept5-default-rtdb.firebaseio.com',
     storageBucket: 'estore-ept5.appspot.com',
-    iosClientId: '403025843120-l780m8u63a3c0tb5gcvmgb2en9vfdkfn.apps.googleusercontent.com',
+    iosClientId:
+        '403025843120-l780m8u63a3c0tb5gcvmgb2en9vfdkfn.apps.googleusercontent.com',
     iosBundleId: 'com.quantec.estore',
   );
 
@@ -80,7 +81,8 @@ class DefaultFirebaseOptions {
     projectId: 'estore-ept5',
     databaseURL: 'https://estore-ept5-default-rtdb.firebaseio.com',
     storageBucket: 'estore-ept5.appspot.com',
-    iosClientId: '403025843120-b68a2075bproc3n25aaqrq57jkhqaqje.apps.googleusercontent.com',
+    iosClientId:
+        '403025843120-b68a2075bproc3n25aaqrq57jkhqaqje.apps.googleusercontent.com',
     iosBundleId: 'com.quantec.estore.RunnerTests',
   );
 }

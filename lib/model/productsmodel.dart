@@ -1,23 +1,21 @@
-class Products {
+class ProductsMod {
   String? name;
   String? price;
-  String? imagedir = '';
+  bool? image;
   String? quantity;
-  Products({
+
+  ProductsMod({
     required this.name,
     required this.price,
-    required this.imagedir,
+    required this.image,
     required this.quantity,
   });
 
-  toMap() {
+  Map<String, dynamic> toMap() {
     return {
-      name: {
-        'price': price,
-        'imagedir': imagedir.toString(),
-        'quantity': quantity,
-        'history': {},
-      }
+      'price': price,
+      'image': image,
+      'quantity': quantity,
     };
   }
 }

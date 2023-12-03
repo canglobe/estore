@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 Widget myButton({onPressed, child}) {
   return SizedBox(
     height: 45,
-    width: 90,
+    width: 135,
     child: ElevatedButton(
       onPressed: onPressed,
       child: child,
