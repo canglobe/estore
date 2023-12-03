@@ -238,7 +238,7 @@ class _ProductScreenState extends State<ProductScreen> {
               itemCount: products.length,
             ));
           } else {
-            return Center();
+            return const Center();
           }
           // } else {
           //   return  Align(

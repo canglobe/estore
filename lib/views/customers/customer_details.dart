@@ -192,69 +192,74 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   _sell(BuildContext context) {
     return Column(
       children: [
+        const Divider(),
         const SizedBox(
           height: 30,
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            const SizedBox(
-              height: 15,
-            ),
-            SizedBox(
-              child: DropdownMenu(
-                width: screenSize(context, isHeight: false, percentage: 70),
-                initialSelection: products![0],
-                label: Text(
-                  'Product Name',
-                  style: Theme.of(context).textTheme.displaySmall,
-                ),
-                dropdownMenuEntries:
-                    products!.map<DropdownMenuEntry<String>>((value) {
-                  return DropdownMenuEntry<String>(
-                    value: value,
-                    label: value,
-                  );
-                }).toList(),
-                onSelected: (value) {
-                  setState(() {
-                    selectedproduct = value as String?;
-                  });
-                },
-                textStyle: Theme.of(context).textTheme.displaySmall,
+        Padding(
+          padding: const EdgeInsets.all(15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              const SizedBox(
+                height: 15,
               ),
-            ),
-            const SizedBox(
-              height: 15,
-            ),
-            SizedBox(
-              child: DropdownMenu(
-                controller: quantityController,
-                width: screenSize(context, isHeight: false, percentage: 20),
-                initialSelection: numbers[0],
-                label: Text(
-                  'Quantity',
-                  style: Theme.of(context).textTheme.displaySmall,
+              SizedBox(
+                child: DropdownMenu(
+                  width: screenSize(context, isHeight: false, percentage: 70),
+                  initialSelection: products![0],
+                  label: Text(
+                    'Product Name',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
+                  dropdownMenuEntries:
+                      products!.map<DropdownMenuEntry<String>>((value) {
+                    return DropdownMenuEntry<String>(
+                      value: value,
+                      label: value,
+                    );
+                  }).toList(),
+                  onSelected: (value) {
+                    setState(() {
+                      selectedproduct = value as String?;
+                    });
+                  },
+                  textStyle: Theme.of(context).textTheme.displaySmall,
                 ),
-                dropdownMenuEntries: numbers.map((e) {
-                  return DropdownMenuEntry(value: e, label: e);
-                }).toList(),
-                onSelected: (value) {
-                  setState(() {
-                    quantityController.text = value!;
-                  });
-                },
-                textStyle: Theme.of(context).textTheme.displaySmall,
               ),
-            ),
-            const SizedBox(
-              height: 15,
-            ),
-          ],
+              const SizedBox(
+                height: 15,
+              ),
+              SizedBox(
+                child: DropdownMenu(
+                  controller: quantityController,
+                  width: screenSize(context, isHeight: false, percentage: 20),
+                  initialSelection: numbers[0],
+                  label: Text(
+                    'Quantity',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
+                  dropdownMenuEntries: numbers.map((e) {
+                    return DropdownMenuEntry(value: e, label: e);
+                  }).toList(),
+                  onSelected: (value) {
+                    setState(() {
+                      quantityController.text = value!;
+                    });
+                  },
+                  textStyle: Theme.of(context).textTheme.displaySmall,
+                ),
+              ),
+              const SizedBox(
+                height: 15,
+              ),
+            ],
+          ),
         ),
         const SizedBox(
           height: 45,
         ),
+
         // Buttons
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -267,7 +272,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                 },
                 child: Text(
                   'Back',
-                  style: Theme.of(context).textTheme.displaySmall,
+                  style: Theme.of(context).textTheme.labelLarge,
                 )),
             myButton(
                 onPressed: () {
@@ -278,10 +283,13 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                 },
                 child: Text(
                   'Sell',
-                  style: Theme.of(context).textTheme.displaySmall,
+                  style: Theme.of(context).textTheme.labelLarge,
                 )),
           ],
-        )
+        ),
+        const SizedBox(
+          height: 45,
+        ),
       ],
     );
   }
@@ -290,10 +298,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     return Center(
       child: TextButton(
           onPressed: () {
-            Navigator.of(context)
-                .push(MaterialPageRoute(builder: (context) => BaseScreen()));
+            Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const BaseScreen()));
           },
-          child: Text('First add any one of product')),
+          child: const Text('First add any one of product')),
     );
   }
 
@@ -302,9 +310,9 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       child: FutureBuilder(
         future: getData(),
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.hasData && snapshot.data.isNotEmpty
-              // &&              snapshot.data[widget.person] != null
-              ) {
+          if (snapshot.hasData &&
+              snapshot.data.isNotEmpty &&
+              snapshot.data[widget.person] != null) {
             List keys = [];
             Map snap = snapshot.data[widget.person];
 
@@ -365,7 +373,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                               children: [
                                 Text(
                                   ' $key',
-                                  style: Theme.of(context).textTheme.labelLarge,
+                                  style:
+                                      Theme.of(context).textTheme.displaySmall,
                                 ),
                                 Align(
                                   alignment: Alignment.bottomRight,
@@ -390,18 +399,18 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
               ),
             );
           } else {
-            return Center(
+            return const Center(
                 child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Icon(Icons.info),
-                const SizedBox(
+                Icon(Icons.info),
+                SizedBox(
                   width: 3,
                 ),
                 Text(
                   'Still Product Was Not Sell',
-                  style: Theme.of(context).textTheme.displayMedium,
+                  // style: Theme.of(context).textTheme.displayMedium,
                 ),
               ],
             ));

@@ -37,13 +37,15 @@ ThemeData lightThemeData() {
       headlineMedium: TextStyle(
           color: Colors.white, fontSize: 27, fontWeight: FontWeight.bold),
       headlineSmall: TextStyle(
-          color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
       //display
-      displayLarge: TextStyle(color: textLightColor, fontSize: 22),
-      displayMedium: TextStyle(color: miniTextColor, fontSize: 20),
-      displaySmall: TextStyle(color: textLightColor, fontSize: 18),
+      displayLarge: TextStyle(color: textLightColor, fontSize: 20),
+      displayMedium: TextStyle(color: miniTextColor, fontSize: 18),
+      displaySmall: TextStyle(color: textLightColor, fontSize: 16),
       //label
-      labelLarge: TextStyle(color: miniTextColor, fontSize: 16),
+      labelLarge:
+          TextStyle(color: textDarkColor, fontSize: 16), // label for buttons
+
       labelMedium: TextStyle(color: miniTextColor, fontSize: 14),
       labelSmall: TextStyle(color: miniTextColor, fontSize: 12),
     ),
