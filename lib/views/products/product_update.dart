@@ -1,11 +1,12 @@
-import 'dart:io' as io;
-import 'package:image/image.dart' as im;
+import 'package:estore/utils/screen_size.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-
-import 'package:estore/main.dart';
+import 'package:estore/hive/hivebox.dart';
+import 'package:estore/widgets/my_widgets.dart';
 import 'package:estore/constants/constants.dart';
+import 'package:image/image.dart' as im;
+import 'package:path_provider/path_provider.dart';
+import 'dart:io' as io;
 
 class ProductUpdate extends StatefulWidget {
   final bool image;
@@ -29,85 +30,35 @@ class _ProductUpdateState extends State<ProductUpdate> {
   final priceController = TextEditingController();
   final quantityController = TextEditingController();
 
-  io.File? updatedImage;
+  bool? image;
   bool? isLoading;
-  bool image = false;
-
   String err = '';
+  io.File? updatedImage;
 
-  preCheck() {
-    String name = nameController.text.toString();
-    String price = priceController.text.toString();
-    String qty = quantityController.text.toString();
-    name.isNotEmpty &&
-            qty.isNotEmpty &&
-            price.isNotEmpty &&
-            updatedImage != null
-        ? proceedData(name, qty, price)
-        : throwError();
-  }
-
-  void proceedData(String name, String qty, String price) async {
-    setState(() {
-      isLoading = true;
-    });
-
-    bool haveImage = image != null ? true : false;
-    haveImage != false ? saveImage(io.File(updatedImage!.path)) : () {};
-    Map productDetails = await localdb.get('productDetails') ?? {};
-    List productNames = await localdb.get('productNames') ?? [];
-
-    productDetails[name] = {
-      'image': haveImage,
-      'price': price,
-      'quantity': qty,
-    };
-
-    productNames.add(name);
-
-    await localdb.put('productDetails', productDetails);
-    await localdb.put('productNames', productNames);
-
-    //await ref.child('productNames').set(productNames);
-    //await ref.child('productDetails').set(productDetails);
-
-    setState(() {
-      isLoading = false;
-    });
-    navigation();
-  }
-
-  navigation() {
-    Navigator.pop(context, true);
-  }
-
-  throwError() {
-    err = 'Please Check necessary fields';
-    setState(() {});
-  }
-
-  pickImageCamera() async {
+  void pickImageCamera() async {
     XFile? img = await ImagePicker().pickImage(
       source: ImageSource.camera,
-      imageQuality: 50,
+      imageQuality: 25,
     );
 
     io.File file = io.File(img!.path);
 
     setState(() {
       updatedImage = file;
+      image = true;
     });
   }
 
-  pickImageGallery() async {
+  void pickImageGallery() async {
     XFile? img = await ImagePicker().pickImage(
       source: ImageSource.gallery,
-      imageQuality: 50,
+      imageQuality: 25,
     );
     io.File file = io.File(img!.path);
 
     setState(() {
       updatedImage = file;
+      image = true;
     });
   }
 
@@ -119,11 +70,53 @@ class _ProductUpdateState extends State<ProductUpdate> {
           await io.Directory('${dir!.path}/images').create(recursive: true);
 
       im.Image? image = im.decodeImage(file.readAsBytesSync());
-      return io.File('${imagedir.path}/$name.png')
+      return io.File('${imagedir.path}/$name.jpg')
         ..writeAsBytesSync(im.encodePng(image!));
     } catch (e) {
       return io.File('');
     }
+  }
+
+  void preCheck() {
+    String name = nameController.text.toString();
+    String price = priceController.text.toString();
+    String qty = quantityController.text.toString();
+    name.isNotEmpty && qty.isNotEmpty && price.isNotEmpty
+        ? proceedData(name, qty, price)
+        : throwError();
+  }
+
+  void proceedData(String name, String qty, String price) async {
+    setState(() {
+      isLoading = true;
+    });
+
+    bool haveImage = updatedImage != null ? true : false;
+    haveImage != false ? saveImage(io.File(updatedImage!.path)) : () {};
+    Map productDetails = await hiveDb.getProductDetails();
+    List productNames = await hiveDb.getProductNames();
+
+    productDetails[name] = {
+      'image': haveImage,
+      'price': price,
+      'quantity': qty,
+    };
+
+    productNames.add(name);
+
+    await hiveDb.putProductDetails(productDetails);
+    await hiveDb.putProductNames(productNames);
+
+    setState(() {
+      isLoading = false;
+    });
+    navigationToPop();
+    navigationToPop();
+  }
+
+  void throwError() {
+    err = 'Please Check necessary fields';
+    setState(() {});
   }
 
   @override
@@ -133,7 +126,7 @@ class _ProductUpdateState extends State<ProductUpdate> {
     quantityController.text = widget.quantity;
     priceController.text = widget.price;
     updatedImage =
-        image ? io.File('${imagePath + widget.productname}.png') : null;
+        image! ? io.File('${imagePath + widget.productname}.jpg') : null;
 
     super.initState();
   }
@@ -142,19 +135,46 @@ class _ProductUpdateState extends State<ProductUpdate> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0.3,
         title: Text(
-          'Edit',
-          style: Theme.of(context).textTheme.displaySmall,
+          'Update Product Details',
+          style: Theme.of(context).textTheme.displayMedium,
         ),
         actions: [
           IconButton(
               onPressed: () async {
-                Map productHistory = await localdb.get('productDetails') ?? {};
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("Confirm"),
+                      content: const Text(
+                          "Are you sure you wish to delete this product?"),
+                      actions: <Widget>[
+                        TextButton(
+                            onPressed: () async {
+                              Map productDetails =
+                                  await hiveDb.getProductDetails();
 
-                productHistory.remove(widget.productname);
-                await localdb.put('productDetails', productHistory);
+                              productDetails.remove(widget.productname);
+                              await hiveDb.putProductDetails(productDetails);
 
-                Navigator.pushNamedAndRemoveUntil(context, '/', (c) => false);
+                              navigationToSplash();
+                            },
+                            child: const Text(
+                              "DELETE",
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                              ),
+                            )),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text("CANCEL"),
+                        ),
+                      ],
+                    );
+                  },
+                );
               },
               icon: const Icon(Icons.delete_forever_outlined))
         ],
@@ -179,7 +199,7 @@ class _ProductUpdateState extends State<ProductUpdate> {
                     padding: const EdgeInsets.all(9),
                     child: Text(
                       err,
-                      style: Theme.of(context).textTheme.displaySmall,
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
                   )
                 : const Center(),
@@ -199,109 +219,69 @@ class _ProductUpdateState extends State<ProductUpdate> {
           height: 5,
         ),
         Text(
-          'Product Details',
-          style: Theme.of(context).textTheme.displayLarge,
+          'Update',
+          style: Theme.of(context).textTheme.titleLarge,
         ),
-        const SizedBox(
-          height: 12,
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Text(
-            //   'Name',
-            //   style: Theme.of(context).textTheme.displaySmall,
-            // ),
-            const SizedBox(
-              height: 3,
+        const SizedBox(height: 12),
+        SizedBox(
+          height: screenSize(context, isHeight: true, percentage: 9),
+          child: TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Name',
+              prefixIcon: Icon(Icons.category_rounded),
             ),
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Name',
-                prefixIcon: Icon(Icons.category_rounded),
-              ),
-              onTap: () {
-                setState(() {
-                  err = '';
-                });
-              },
-              onTapOutside: (event) {
-                FocusManager.instance.primaryFocus?.unfocus();
-              },
-            ),
-          ],
+            onTap: () {
+              setState(() {
+                err = '';
+              });
+            },
+            onTapOutside: (event) {
+              FocusManager.instance.primaryFocus?.unfocus();
+            },
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ),
-        const SizedBox(
-          height: 12,
-        ),
-        Column(
-          // mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Text(
-                //   'Price',
-                //   style: Theme.of(context).textTheme.displaySmall,
-                // ),
-                const SizedBox(
-                  height: 3,
-                ),
-                SizedBox(
-                  // width: ScreenSize(context, false, 33),
-                  child: TextField(
-                    controller: priceController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Price',
-                      prefixIcon: Icon(Icons.currency_rupee_rounded),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        err = '';
-                      });
-                    },
-                  ),
-                ),
-              ],
+        const SizedBox(height: 12),
+        SizedBox(
+          height: screenSize(context, isHeight: true, percentage: 9),
+          child: TextField(
+            controller: priceController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Price',
+              prefixIcon: Icon(Icons.currency_rupee_rounded),
             ),
-            const SizedBox(
-              height: 12,
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Text(
-                //   'Quantity',
-                //   style: Theme.of(context).textTheme.displaySmall,
-                // ),
-                const SizedBox(
-                  height: 3,
-                ),
-                TextField(
-                  controller: quantityController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Quantity',
-                    prefixIcon: Icon(Icons.keyboard),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      err = '';
-                    });
-                  },
-                ),
-              ],
-            ),
-          ],
+            onTap: () {
+              setState(() {
+                err = '';
+              });
+            },
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ),
-        const SizedBox(
-          height: 12,
+        const SizedBox(height: 12),
+        SizedBox(
+          height: screenSize(context, isHeight: true, percentage: 9),
+          child: TextField(
+            controller: quantityController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Quantity',
+              prefixIcon: Icon(Icons.keyboard),
+            ),
+            onTap: () {
+              setState(() {
+                err = '';
+              });
+            },
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -314,11 +294,12 @@ class _ProductUpdateState extends State<ProductUpdate> {
         const SizedBox(
           height: 5,
         ),
-        image != false
-            ? _imageCard()
+        io.File('${imagePath + widget.productname}.jpg').existsSync() ||
+                updatedImage != null
+            ? _alreadyHaveImage()
             : Text(
                 'Select Image',
-                style: Theme.of(context).textTheme.displayLarge,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
         const SizedBox(
           height: 25,
@@ -339,7 +320,7 @@ class _ProductUpdateState extends State<ProductUpdate> {
                 ),
                 Text(
                   'Camera',
-                  style: Theme.of(context).textTheme.displaySmall,
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
               ],
             ),
@@ -354,8 +335,7 @@ class _ProductUpdateState extends State<ProductUpdate> {
                       },
                       child: const Icon(Icons.photo)),
                 ),
-                Text('Gallery',
-                    style: Theme.of(context).textTheme.displaySmall),
+                Text('Gallery', style: Theme.of(context).textTheme.titleSmall),
               ],
             ),
           ],
@@ -367,7 +347,7 @@ class _ProductUpdateState extends State<ProductUpdate> {
     );
   }
 
-  _imageCard() {
+  _alreadyHaveImage() {
     return Column(
       children: [
         const SizedBox(
@@ -375,17 +355,46 @@ class _ProductUpdateState extends State<ProductUpdate> {
         ),
         Text(
           'Selected Image',
-          style: Theme.of(context).textTheme.displayLarge,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
-        SizedBox(
-            height: 150,
-            width: 300,
-            child: Card(
-                elevation: 20,
-                child: Image.file(
-                  io.File(updatedImage!.path),
-                  fit: BoxFit.fill,
-                ))),
+        Stack(
+          children: [
+            SizedBox(
+                height: 150,
+                width: 300,
+                child: Card(
+                    elevation: 20,
+                    child: Image.file(
+                      io.File(updatedImage!.path),
+                      fit: BoxFit.fill,
+                    ))),
+            Align(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                  padding: const EdgeInsets.all(9),
+                  splashRadius: 25,
+                  onPressed: () async {
+                    if (io.File('${imagePath + widget.productname}.jpg')
+                        .existsSync()) {
+                      io.File('${imagePath + widget.productname}.jpg').delete();
+                      Map productDetails = await hiveDb.getProductDetails();
+                      productDetails[widget.productname]['image'] = false;
+                      await hiveDb.putProductDetails(productDetails);
+                    }
+                    setState(() {
+                      image = false;
+                      updatedImage = null;
+                    });
+                  },
+                  icon: const Card(
+                    child: Icon(
+                      Icons.close,
+                      color: Colors.redAccent,
+                    ),
+                  )),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -394,36 +403,39 @@ class _ProductUpdateState extends State<ProductUpdate> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        SizedBox(
-          height: 45,
-          width: 90,
-          child: ElevatedButton(
-              onPressed: () {},
-              child: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.redAccent, fontSize: 18),
-              )),
-        ),
-        SizedBox(
-          height: 45,
-          width: 90,
-          child: ElevatedButton(
-            onPressed: () async {
-              preCheck();
+        myButton(
+            onPressed: () {
+              Navigator.pop(context);
             },
-            child: isLoading != true
-                ? Center(
-                    child: Text(
-                      'Update',
-                      style: Theme.of(context).textTheme.displaySmall,
-                    ),
-                  )
-                : const CircularProgressIndicator(
-                    color: Colors.white,
+            child: const Text(
+              'Back',
+            )),
+        const SizedBox(
+          width: 5,
+        ),
+        myButton(
+          onPressed: () async {
+            preCheck();
+          },
+          child: isLoading != true
+              ? const Center(
+                  child: Text(
+                    'Update',
                   ),
-          ),
+                )
+              : const CircularProgressIndicator(
+                  color: Colors.white,
+                ),
         ),
       ],
     );
+  }
+
+  void navigationToPop() {
+    Navigator.pop(context, true);
+  }
+
+  void navigationToSplash() {
+    Navigator.pushNamedAndRemoveUntil(context, '/', (context) => false);
   }
 }

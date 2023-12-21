@@ -1,10 +1,12 @@
-// ignore_for_file: must_be_immutable
+// ignore_for_file: must_be_immutable, unused_local_variable
 
 import 'package:estore/hive/hivebox.dart';
-import 'package:estore/main.dart';
+import 'package:estore/hive/store_io_hive.dart';
+
 import 'package:estore/views/products/product_update.dart';
-import 'package:estore/utils/size.dart';
-import 'package:estore/widgets/widgets.dart';
+import 'package:estore/utils/screen_size.dart';
+import 'package:estore/widgets/custom_tile.dart';
+import 'package:estore/widgets/my_widgets.dart';
 
 import 'package:flutter/material.dart';
 
@@ -14,9 +16,9 @@ class ProductDetailPage extends StatefulWidget {
   final String price;
   final String quantity;
   final String productname;
-  bool ifsell;
+  final bool ifsell;
 
-  ProductDetailPage({
+  const ProductDetailPage({
     super.key,
     required this.index,
     required this.image,
@@ -35,349 +37,90 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   final quantityController = TextEditingController();
   final priceController = TextEditingController();
 
-  String selectedQuantity = '1';
   List? persons;
   List<String> names = [];
-
-  String? quan;
-  bool dropdownMode = false;
-  HiveDB hiveDb = HiveDB();
-
+  String selectedQuantity = '1';
   var numbers = ['1', '2', '3', '4', '5'];
+  bool? ifsell;
+  bool? haveStock;
+  HiveIO hiveIO = HiveIO();
 
   getData() async {
-    var productHistory = await localdb.get('productHistory') ?? {};
-
+    var productHistory = await hiveDb.getProductHistory();
+    var quantity = await getProductData(needData: 'quantity') ?? '0';
+    quantity != '0' ? haveStock = false : haveStock = true;
     return productHistory[widget.productname];
   }
 
-  getQuantity(productname) async {
-    Map productDetails = await localdb.get('productDetails') ?? {};
-    String quantity = productDetails[productname]['quantity'];
-    return quantity;
+  getProductData({required String needData}) async {
+    // in here needData ['quantity' or 'price' ]
+    Map data = await hiveDb.getProductDetails() ?? '';
+
+    switch (needData) {
+      case 'quantity':
+        return data[widget.productname]['quantity'];
+
+      case 'price':
+        return data[widget.productname]['price'];
+      case '':
+        return '0';
+    }
   }
 
   getNames() async {
     List<String> namess = [];
-    List personsNames = await localdb.get('personsNames') ?? [];
+    List customers = await hiveDb.getPersonsNames();
     quantityController.text = selectedQuantity;
-    priceController.text =
-        await localdb.get('productDetails')[widget.productname]['price'] ?? '';
+    priceController.text = await getProductData(needData: 'price');
 
-    for (var element in personsNames) {
+    for (var element in customers) {
       namess.add(element);
     }
     setState(() {
-      persons = personsNames;
+      persons = customers;
       names = namess;
     });
   }
 
   @override
   void initState() {
-    super.initState();
     getNames();
-  }
-
-  save() async {
-    Map productHistory = await localdb.get('productHistory') ?? {};
-    Map personsHistory = await localdb.get('personsHistory') ?? {};
-    Map productDetails = await localdb.get('productDetails') ?? {};
-    List personsNames = await localdb.get('personsNames') ?? [];
-
-    var date = DateTime.now().toString().substring(0, 19);
-
-    if (!personsNames.contains(nameController.text)) {
-      personsNames.add(nameController.text);
-      await localdb.put('personsNames', personsNames);
-      //await ref.child('personsNames').set(personsNames);
-    } else {
-      //
-    }
-
-    if (!productHistory.containsKey(widget.productname)) {
-      productHistory[widget.productname] = {};
-      productHistory[widget.productname][date] = {
-        'person': nameController.text,
-        'quantity': quantityController.text,
-      };
-      await localdb.put('productHistory', productHistory);
-      //await ref.child('productHistory').set(productHistory);
-    } else {
-      productHistory[widget.productname][date] = {
-        'person': nameController.text,
-        'quantity': quantityController.text,
-      };
-
-      await localdb.put('productHistory', productHistory);
-      //await ref.child('productHistory').set(productHistory);
-    }
-
-    if (!personsHistory.containsKey(nameController.text)) {
-      personsHistory[nameController.text] = {};
-      personsHistory[nameController.text][date] = {
-        'product': widget.productname,
-        'quantity': quantityController.text,
-      };
-      await localdb.put('personsHistory', personsHistory);
-      //await ref.child('personsHistory').set(personsHistory);
-    } else {
-      personsHistory[nameController.text][date] = {
-        'product': widget.productname,
-        'quantity': quantityController.text,
-      };
-      await localdb.put('personsHistory', personsHistory);
-      //await ref.child('personsHistory').set(personsHistory);
-    }
-
-    var quantity = productDetails[widget.productname]['quantity'];
-    int qty = int.parse(quantity) - int.parse(quantityController.text);
-    productDetails[widget.productname]['quantity'] = qty.toString();
-    await localdb.put('productDetails', productDetails);
-    //await ref.child('productDetails').set(productDetails);
-
-    setState(() {
-      widget.ifsell = false;
-    });
-  }
-
-  deleteHistory(index, keys, snap) async {
-    Map productHistory = await localdb.get('productHistory') ?? {};
-    var personsHistory = await localdb.get('personsHistory') ?? {};
-    var productdetails = await hiveDb.getProductDetails();
-
-    Map history = productHistory[widget.productname];
-    var person = history[keys[index]]['person'];
-    var quant = history[keys[index]]['quantity'];
-
-    var qty = productdetails[widget.productname]['quantity'];
-
-    var newqty = int.parse(qty) + int.parse(quant);
-    productdetails[widget.productname]['quantity'] = newqty.toString();
-
-    Map history1 = personsHistory[person];
-    history1.remove(keys[index]);
-    history.remove(keys[index]);
-    personsHistory[person] = history1;
-    productHistory[widget.productname] = history;
-    await localdb.put('productHistory', productHistory);
-    await localdb.put('personsHistory', personsHistory);
-    await hiveDb.putProductDetails(productdetails);
-    snap.remove(keys[index]);
+    ifsell = widget.ifsell;
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            widget.productname,
-          ),
-          actions: [
-            !widget.ifsell
-                ? IconButton(
-                    onPressed: () async {
-                      var refresh =
-                          await Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => ProductUpdate(
-                                    productname: widget.productname,
-                                    price: widget.price,
-                                    quantity: widget.quantity,
-                                    image: widget.image,
-                                  )));
-
-                      setState(() {});
-                    },
-                    icon: const Icon(
-                      Icons.edit_document,
-                      color: Colors.white,
-                    ),
-                    tooltip: 'Update',
-                  )
-                : const Center(),
-          ],
+      appBar: AppBar(
+        elevation: 0.3,
+        title: Text(
+          widget.productname,
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            children: [
-              Expanded(
-                  flex: 3,
-                  child:
-                      widget.ifsell != true ? _sellHistory() : _sell(context)),
-            ],
-          ),
-        ),
-        floatingActionButton: _fab(context));
-  }
-
-  _sellHistory() {
-    return Column(
-      children: [
-        Expanded(
-          flex: 1,
-          child: SizedBox(
-            width: 500,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                FutureBuilder(
-                    future: getQuantity(widget.productname),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<dynamic> snapshot) {
-                      return snapshot.hasData
-                          ? Text(
-                              'Current Stock: ${snapshot.data.toString()}',
-                              style: Theme.of(context).textTheme.displayLarge,
-                            )
-                          : const SizedBox();
-                    }),
-              ],
-            ),
-          ),
-        ),
-        const Divider(),
-        _history(),
-      ],
-    );
-  }
-
-  _history() {
-    return Expanded(
-      flex: 9,
-      child: FutureBuilder(
-        future: getData(),
-        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-          if (snapshot.hasData && snapshot.data.isNotEmpty) {
-            List keys = [];
-            Map snap = snapshot.data;
-
-            // snap.forEach((key, value) {
-            //   keys.contains(key) ? print(key) : keys.add(key);
-            // });
-
-            for (String x in snap.keys) {
-              keys.add(x);
-              if (keys.contains(x)) {
-                //
-              } else {
-                keys.add(x);
-              }
-            }
-            keys.sort();
-            keys = keys.reversed.toList();
-            return ListView.builder(
-              itemBuilder: (context, index) {
-                String key = keys[index];
-                key =
-                    '${key.substring(8, 10)}/${key.substring(5, 7)}/${key.substring(2, 4)}';
-
-                return Dismissible(
-                    key: ValueKey(keys[index]),
-                    confirmDismiss: (DismissDirection direction) async {
-                      return await showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text("Confirm"),
-                            content: const Text(
-                                "Are you sure you wish to delete this item?"),
-                            actions: <Widget>[
-                              TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(true),
-                                  child: const Text("DELETE")),
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                child: const Text("CANCEL"),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    onDismissed: (direction) async {
-                      deleteHistory(index, keys, snap);
-                      setState(() {});
-                    },
-                    child: Column(
-                      children: [
-                        SizedBox(
-                          height: screenSize(context,
-                              isHeight: true, percentage: 14),
-                          child: Card(
-                            elevation: 0,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Text(
-                                  ' $key',
-                                  style:
-                                      Theme.of(context).textTheme.displaySmall,
-                                ),
-                                const SizedBox(
-                                  height: 14,
-                                ),
-                                Align(
-                                  alignment: Alignment.bottomRight,
-                                  child: Text(
-                                    '${snap[keys[index]]['person']} ( ${snap[keys[index]]['quantity']} )',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displayMedium,
-                                    overflow: TextOverflow.clip,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const Divider(),
-                      ],
-                    ));
-              },
-              itemCount: keys.length,
-            );
-          } else {
-            return const Center(
-                child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(Icons.info),
-                SizedBox(
-                  width: 3,
-                ),
-                Text('Still Product Was Not Sell'),
-              ],
-            ));
-          }
-        },
+        actions: [
+          ifsell != true
+              ? IconButton(
+                  onPressed: () async {
+                    navToProductUpdate();
+                  },
+                  icon: const Icon(
+                    Icons.edit_document,
+                    color: Colors.white,
+                  ),
+                  tooltip: 'Update',
+                )
+              : const Center(),
+        ],
       ),
+      body: Column(
+        children: [
+          Expanded(
+              flex: 3, child: ifsell != true ? _sellHistory() : _sell(context)),
+        ],
+      ),
+      floatingActionButton:
+          haveStock != true ? _fab(context) : const SizedBox(),
     );
-  }
-
-  _fab(context) {
-    return widget.ifsell != true
-        ? FloatingActionButton.extended(
-            onPressed: () async {
-              quantityController.text = selectedQuantity;
-              priceController.text = await localdb
-                      .get('productDetails')[widget.productname]['price'] ??
-                  '';
-
-              setState(() {
-                widget.ifsell = true;
-              });
-            },
-            label: Text(
-              'Sell',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          )
-        : const Center();
   }
 
   _sell(context) {
@@ -385,7 +128,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: Card(
         elevation: 0,
         child: Padding(
-          padding: const EdgeInsets.all(5),
+          padding: const EdgeInsets.all(15),
           child: Column(
             children: [
               const SizedBox(
@@ -460,7 +203,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 },
               ),
               const SizedBox(
-                height: 23,
+                height: 14,
               ),
               Row(
                 children: [
@@ -473,6 +216,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         labelText: 'Price',
                         prefixIcon: Icon(Icons.currency_rupee_rounded),
                       ),
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
                   ),
                   const SizedBox(
@@ -488,19 +232,20 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       dropdownMenuEntries: numbers.map((e) {
                         return DropdownMenuEntry(value: e, label: e);
                       }).toList(),
+                      leadingIcon: const Icon(Icons.keyboard),
                       onSelected: (value) {
                         setState(() {
                           selectedQuantity = value!;
                           quantityController.text = selectedQuantity;
                         });
                       },
-                      textStyle: Theme.of(context).textTheme.displaySmall,
+                      textStyle: Theme.of(context).textTheme.titleSmall,
                     ),
                   ),
                 ],
               ),
               const SizedBox(
-                height: 23,
+                height: 100,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -508,7 +253,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   myButton(
                       onPressed: () async {
                         setState(() {
-                          widget.ifsell = false;
+                          ifsell = false;
                         });
                       },
                       child: myText(
@@ -518,7 +263,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   myButton(
                       onPressed: () async {
                         if (nameController.text.isNotEmpty) {
-                          save();
+                          var value = await hiveIO.storeSoldData(
+                            nameController.text,
+                            widget.productname,
+                            priceController.text,
+                            quantityController.text,
+                          );
+                          if (value == 1) {
+                            setState(() {});
+                            ifsell = false;
+                          }
                         } else {}
                       },
                       child: myText(
@@ -532,5 +286,170 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         ),
       ),
     );
+  }
+
+  _sellHistory() {
+    return Column(
+      children: [
+        Expanded(
+          flex: 1,
+          child: SizedBox(
+            width: 500,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                FutureBuilder(
+                    future: getProductData(needData: 'quantity'),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<dynamic> snapshot) {
+                      return snapshot.hasData
+                          ? Text(
+                              'Current Stock: ${snapshot.data.toString()}',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            )
+                          : const SizedBox();
+                    }),
+              ],
+            ),
+          ),
+        ),
+        const Divider(),
+        _history(),
+      ],
+    );
+  }
+
+  _history() {
+    return Expanded(
+      flex: 9,
+      child: FutureBuilder(
+        future: getData(),
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          if (snapshot.hasData && snapshot.data.isNotEmpty) {
+            List keys = [];
+            Map snap = snapshot.data;
+
+            for (String x in snap.keys) {
+              keys.add(x);
+              if (keys.contains(x)) {
+                //
+              } else {
+                keys.add(x);
+              }
+            }
+            keys.sort();
+            keys = keys.reversed.toList();
+            return Padding(
+              padding: const EdgeInsets.only(left: 9, right: 9),
+              child: ListView.builder(
+                itemBuilder: (context, index) {
+                  String key = keys[index];
+                  key =
+                      '${key.substring(8, 10)}-${key.substring(5, 7)}-${key.substring(0, 4)}';
+
+                  return Dismissible(
+                      key: ValueKey(keys[index]),
+                      confirmDismiss: (DismissDirection direction) async {
+                        return await showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text("Confirm"),
+                              content: const Text(
+                                  "Are you sure you wish to delete this item?"),
+                              actions: <Widget>[
+                                TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                    child: const Text(
+                                      "DELETE",
+                                      style: TextStyle(color: Colors.redAccent),
+                                    )),
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(false),
+                                  child: const Text("CANCEL"),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      onDismissed: (direction) async {
+                        // deleteHistory(index, keys, snap);
+                        var value = await hiveIO.deleteSoldData(
+                          widget.productname,
+                          keys[index],
+                        );
+                        if (value == 1) {
+                          snap.remove(keys[index]);
+                          setState(() {});
+                        }
+                      },
+                      child: Column(
+                        children: [
+                          customTile(context,
+                              date: ' $key',
+                              name: snap[keys[index]]['customer'],
+                              price: snap[keys[index]]['price'].toString(),
+                              quantity: snap[keys[index]]['quantity']),
+                        ],
+                      ));
+                },
+                itemCount: keys.length,
+              ),
+            );
+          } else {
+            return const Center(
+                child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Icons.info),
+                SizedBox(
+                  width: 3,
+                ),
+                Text('Still Product Was Not Sell'),
+              ],
+            ));
+          }
+        },
+      ),
+    );
+  }
+
+  _fab(context) {
+    return ifsell != true
+        ? FloatingActionButton.extended(
+            onPressed: () async {
+              // var quantity = await getProductData(needData: 'quantity');
+              // var price = await getProductData(needData: 'price');
+
+              // if (quantity != 0) {
+              //   quantityController.text = selectedQuantity;
+              //   priceController.text = price;
+              // } else {}
+              setState(() {
+                ifsell = true;
+              });
+            },
+            label: Text(
+              'Sell',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+          )
+        : const Center();
+  }
+
+  void navToProductUpdate() async {
+    var refresh = await Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => ProductUpdate(
+              productname: widget.productname,
+              price: widget.price,
+              quantity: widget.quantity,
+              image: widget.image,
+            )));
+
+    setState(() {});
   }
 }

@@ -1,16 +1,12 @@
 import 'package:estore/hive/hivebox.dart';
+import 'package:estore/hive/store_io_hive.dart';
 
-import 'package:estore/model/productsmodel.dart';
-
-import 'package:firebase_database/firebase_database.dart';
+import 'package:estore/utils/screen_size.dart';
 
 import 'package:flutter/material.dart';
 import 'dart:io' as io;
 
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-
-import 'package:image/image.dart' as im;
+import '../../utils/image_io.dart';
 
 class NewProduct extends StatefulWidget {
   const NewProduct({super.key});
@@ -26,127 +22,45 @@ class _NewProductState extends State<NewProduct> {
 
   HiveDB hiveDb = HiveDB();
 
-  DatabaseReference ref = FirebaseDatabase.instance.ref();
-
   io.File? image;
   bool? isLoading;
 
   String err = '';
 
-  preCheck() {
-    String name = nameController.text.toString();
-    String price = priceController.text.toString();
-    String qty = quantityController.text.toString();
-    // check having all data
-    name.isNotEmpty && qty.isNotEmpty && price.isNotEmpty
-        ? proceedData(name, qty, price)
-        : throwError();
-  }
+  preCheck() async {
+    String productName = nameController.text;
+    String productPrice = priceController.text;
+    String productQuantity = quantityController.text;
 
-  proceedData(String name, String quantity, String price) async {
-    setState(() {
-      isLoading = true;
-    });
-    List productNames = [];
-    bool haveImage = image != null ? true : false;
-    haveImage != false ? saveImage(io.File(image!.path)) : () {};
-
-    // Get data from local database
-    Map productDetails = await hiveDb.getProductDetails() ?? {};
-    productNames = await hiveDb.getProductNames() ?? [];
-
-    // productDetails[name] = {
-    //   'image': haveImage,
-    //   'price': price,
-    //   'quantity': quantity,
-    // };
-
-    if (!productDetails.containsKey(name)) {
-      productDetails.putIfAbsent(
-          name,
-          () => ProductsMod(
-                  name: name,
-                  price: price,
-                  image: haveImage,
-                  quantity: quantity)
-              .toMap());
-      productNames.add(name);
-
-      await hiveDb.putProductDetails(productDetails);
-      await hiveDb.putProductNames(productNames);
-
-      setState(() {
-        isLoading = false;
-      });
-
-      // Screen pop out
-      popOut();
+    if (productName.isNotEmpty &&
+        productPrice.isNotEmpty &&
+        productQuantity.isNotEmpty) {
+      var done = await hiveIO.storeNewProduct(
+        productName: productName,
+        price: productPrice,
+        quantity: productQuantity,
+        image: image,
+        haveImage: image != null ? true : false,
+      );
+      return done;
     } else {
-      setState(() {
-        err = 'Already exists this product';
-        isLoading = false;
-      });
+      _throwError();
     }
   }
 
-  popOut() {
-    Navigator.pop(context);
-  }
-
-  throwError() {
-    err = 'Something Missing in Product Details';
+  _throwError() {
+    err = 'Please check necessary fields.';
     setState(() {});
-  }
-
-  pickImageCamera() async {
-    XFile? img = await ImagePicker().pickImage(
-      source: ImageSource.camera,
-      imageQuality: 50,
-    );
-
-    io.File file = io.File(img!.path);
-
-    setState(() {
-      err = '';
-      image = file;
-    });
-  }
-
-  pickImageGallery() async {
-    XFile? img = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 50,
-    );
-    io.File file = io.File(img!.path);
-
-    setState(() {
-      err = '';
-      image = file;
-    });
-  }
-
-  Future<io.File> saveImage(io.File file) async {
-    String name = nameController.text.toString();
-    try {
-      var dir = await getExternalStorageDirectory();
-      var imagedir =
-          await io.Directory('${dir!.path}/images').create(recursive: true);
-
-      im.Image? image = im.decodeImage(file.readAsBytesSync());
-      return io.File('${imagedir.path}/$name.png')
-        ..writeAsBytesSync(im.encodePng(image!));
-    } catch (e) {
-      return io.File('');
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0.3,
         title: Text(
-          'Add Product',
-          style: Theme.of(context).textTheme.headlineMedium,
+          'New Product',
+          style: Theme.of(context).textTheme.displayMedium,
         ),
       ),
       body: bodyContent(context),
@@ -169,7 +83,9 @@ class _NewProductState extends State<NewProduct> {
                     padding: const EdgeInsets.all(9),
                     child: Text(
                       err,
-                      style: Theme.of(context).textTheme.displaySmall,
+                      style: Theme.of(context).textTheme.titleSmall!.apply(
+                            color: Colors.redAccent,
+                          ),
                     ),
                   )
                 : const Center(),
@@ -188,106 +104,65 @@ class _NewProductState extends State<NewProduct> {
         const SizedBox(
           height: 5,
         ),
-        Text(
-          'Product Details',
-          style: Theme.of(context).textTheme.displayLarge,
+        Text('Product Details', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: screenSize(context, isHeight: true, percentage: 9),
+          child: TextField(
+            controller: nameController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Name',
+              prefixIcon: Icon(Icons.category_rounded),
+            ),
+            onTap: () {
+              setState(() {
+                err = '';
+              });
+            },
+            onTapOutside: (event) {
+              FocusManager.instance.primaryFocus?.unfocus();
+            },
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ),
-        const SizedBox(
-          height: 12,
+        const SizedBox(height: 12),
+        SizedBox(
+          height: screenSize(context, isHeight: true, percentage: 9),
+          child: TextField(
+            controller: priceController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Price',
+              prefixIcon: Icon(Icons.currency_rupee_rounded),
+            ),
+            onTap: () {
+              setState(() {
+                err = '';
+              });
+            },
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Text(
-            //   'Name',
-            //   style: Theme.of(context).textTheme.displaySmall,
-            // ),
-            const SizedBox(
-              height: 3,
+        const SizedBox(height: 12),
+        SizedBox(
+          height: screenSize(context, isHeight: true, percentage: 9),
+          child: TextField(
+            controller: quantityController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Quantity',
+              prefixIcon: Icon(Icons.keyboard),
             ),
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Name',
-                prefixIcon: Icon(Icons.category_rounded),
-              ),
-              onTap: () {
-                setState(() {
-                  err = '';
-                });
-              },
-              onTapOutside: (event) {
-                FocusManager.instance.primaryFocus?.unfocus();
-              },
-            ),
-          ],
-        ),
-        const SizedBox(
-          height: 12,
-        ),
-        Column(
-          // mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Text(
-                //   'Price',
-                //   style: Theme.of(context).textTheme.displaySmall,
-                // ),
-                const SizedBox(
-                  height: 3,
-                ),
-                SizedBox(
-                  // width: ScreenSize(context, false, 33),
-                  child: TextField(
-                    controller: priceController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Price',
-                      prefixIcon: Icon(Icons.currency_rupee_rounded),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        err = '';
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Text(
-                //   'Quantity',
-                //   style: Theme.of(context).textTheme.displaySmall,
-                // ),
-                const SizedBox(
-                  height: 3,
-                ),
-                TextField(
-                  controller: quantityController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Quantity',
-                    prefixIcon: Icon(Icons.keyboard),
-                  ),
-                  onTap: () {
-                    setState(() {
-                      err = '';
-                    });
-                  },
-                ),
-              ],
-            ),
-          ],
+            onTap: () {
+              setState(() {
+                err = '';
+              });
+            },
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ),
         const SizedBox(
           height: 12,
@@ -305,10 +180,10 @@ class _NewProductState extends State<NewProduct> {
           height: 5,
         ),
         image != null
-            ? _imageCard()
+            ? _selectedImage()
             : Text(
                 'Select Image',
-                style: Theme.of(context).textTheme.displayLarge,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
         const SizedBox(
           height: 25,
@@ -322,14 +197,17 @@ class _NewProductState extends State<NewProduct> {
                   height: 45,
                   width: 113,
                   child: OutlinedButton(
-                      onPressed: () {
-                        pickImageCamera();
+                      onPressed: () async {
+                        var img = await pickImageCamera();
+                        setState(() {
+                          image = img;
+                        });
                       },
                       child: const Icon(Icons.camera_alt)),
                 ),
                 Text(
                   'Camera',
-                  style: Theme.of(context).textTheme.displaySmall,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
@@ -339,13 +217,18 @@ class _NewProductState extends State<NewProduct> {
                   height: 45,
                   width: 113,
                   child: OutlinedButton(
-                      onPressed: () {
-                        pickImageGallery();
+                      onPressed: () async {
+                        var img = await pickImageGallery();
+                        setState(() {
+                          image = img;
+                        });
                       },
                       child: const Icon(Icons.photo)),
                 ),
-                Text('Gallery',
-                    style: Theme.of(context).textTheme.displaySmall),
+                Text(
+                  'Gallery',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ],
             ),
           ],
@@ -357,7 +240,7 @@ class _NewProductState extends State<NewProduct> {
     );
   }
 
-  _imageCard() {
+  _selectedImage() {
     return Column(
       children: [
         const SizedBox(
@@ -386,7 +269,13 @@ class _NewProductState extends State<NewProduct> {
       width: 90,
       child: ElevatedButton(
         onPressed: () async {
-          preCheck();
+          bool done = await preCheck();
+          done
+              ? navToPop()
+              : setState(() {
+                  err = 'Already exists this product';
+                  isLoading = false;
+                });
         },
         child: isLoading != true
             ? Text(
@@ -398,5 +287,9 @@ class _NewProductState extends State<NewProduct> {
               ),
       ),
     );
+  }
+
+  navToPop() {
+    Navigator.pop(context);
   }
 }

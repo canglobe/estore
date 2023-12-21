@@ -1,3 +1,4 @@
+// chat model for future need.
 class Chat {
   String message;
   String id;

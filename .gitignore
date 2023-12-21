@@ -1,7 +1,7 @@
-.dart_tool/
-.idea/
-.flutter-plugins
-.flutter-plugins-dependencies
+/.dart_tool/
+/.idea/
+/.flutter-plugins
+/.flutter-plugins-dependencies
 
 /build/
 /android/app/google-services.json
