@@ -1,49 +1,38 @@
 import 'package:estore/main.dart';
 
+// Object for hive database
+HiveDB hiveDb = HiveDB();
+
 class HiveDB {
-  getProductNames() async {
-    List data = await localdb.get('productNames') ?? [];
+  // Theme mode
+  Future<bool> getThemeMode() async => await localdb.get('darkMode') ?? false;
 
-    return data;
-  }
+  putThemeMode(data) async => await localdb.put('darkMode', data);
 
-  putProductNames(data) async {
-    await localdb.put('productNames', data);
-  }
+  // Products
+  getProductNames() async => await localdb.get('productNames') ?? [];
 
-  getProductHistory() async {
-    Map data = await localdb.get('productHistory') ?? {};
-    return data;
-  }
+  putProductNames(data) async => await localdb.put('productNames', data);
 
-  putProductHistory(data) async {
-    await localdb.put('productHistory', data);
-  }
+  getProductHistory() async => await localdb.get('productHistory') ?? {};
 
-  getProductDetails() async {
-    Map data = await localdb.get('productDetails') ?? {};
-    return data;
-  }
+  putProductHistory(data) async => await localdb.put('productHistory', data);
 
-  putProductDetails(data) async {
-    await localdb.put('productDetails', data);
-  }
+  getProductDetails() async => await localdb.get('productDetails') ?? {};
 
-// ----------------------------------------------------person
-  getPersonsHistory() async {
-    Map data = await localdb.get('personsHistory') ?? {};
-    return data;
-  }
+  putProductDetails(data) async => await localdb.put('productDetails', data);
 
-  putPersonsHistory(data) async {
-    await localdb.put('personsHistory', data);
-  }
+  // customers
+  getPersonsHistory() async => await localdb.get('customersHistory') ?? {};
 
-  getPersonsNames() async {
-    List data = await localdb.get('personsNames') ?? [];
+  putPersonsHistory(data) async => await localdb.put('customersHistory', data);
 
-    return data;
-  }
+  getPersonsNames() async => await localdb.get('customers') ?? [];
 
-// ------------------------------------------------------
+  putPersonsNames(data) async => await localdb.put('customers', data);
+
+  // Overall history
+  getOverallHistory() async => await localdb.get('overallHistory') ?? {};
+
+  putOverallHistory(data) async => await localdb.put('overallHistory', data);
 }

@@ -1,10 +1,10 @@
-class ProductsMod {
+class ProductsModel {
   String? name;
   String? price;
   bool? image;
   String? quantity;
 
-  ProductsMod({
+  ProductsModel({
     required this.name,
     required this.price,
     required this.image,

@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-import 'package:estore/utils/size.dart';
+import 'package:estore/utils/screen_size.dart';
 import 'package:estore/hive/hivebox.dart';
 import 'package:estore/constants/constants.dart';
 import 'package:estore/views/products/product_plus.dart';
@@ -28,36 +28,13 @@ class _ProductScreenState extends State<ProductScreen> {
     return productDetails;
   }
 
-  navigationTo(context) async {
-    var refresh = await Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => const NewProduct()));
-    setState(() {
-      reFresh = refresh;
-    });
+  checkImageExists(productname) async {
+    var exists =
+        await File('${imagePath + productname}.jpg').exists() ? true : false;
+
+    return exists;
   }
 
-  navigationToSplash() {
-    Navigator.pushNamed(context, '/');
-  }
-
-  pageRoute(BuildContext context, int index, Map<dynamic, dynamic> snap,
-      List<dynamic> products, bool ifsell) {
-    Navigator.of(context)
-        .push(MaterialPageRoute(
-            builder: (context) => ProductDetailPage(
-                  index: index,
-                  price: snap[products[index]]['price'],
-                  image: snap[products[index]]['image'],
-                  quantity: snap[products[index]]['quantity'],
-                  productname: products[index],
-                  ifsell: ifsell,
-                )))
-        .then((value) {
-      setState(() {});
-    });
-  }
-
-// UI Starts Here
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,10 +66,15 @@ class _ProductScreenState extends State<ProductScreen> {
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
-        padding: const EdgeInsets.only(left: 20),
-        child: Text(
-          'My Products',
-          style: Theme.of(context).textTheme.displayMedium,
+        padding: const EdgeInsets.only(left: 9, top: 9, bottom: 5),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'My Products',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ],
         ),
       ),
     );
@@ -101,248 +83,157 @@ class _ProductScreenState extends State<ProductScreen> {
   _productsList() {
     return Expanded(
       child: FutureBuilder(
-        future: getData(),
+        future: hiveDb.getProductDetails(),
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.hasData && snapshot.data.isNotEmpty) {
             List products = [];
-
             Map snap = snapshot.data;
-
             for (var key in snap.keys) {
               products.add(key);
             }
-
             products.sort();
             return Container(
+                padding: const EdgeInsets.all(5),
                 child: ListView.builder(
-              itemBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.all(2),
-                child: GestureDetector(
-                  onTap: () {
-                    pageRoute(context, index, snap, products, false);
-                  },
-                  child: SizedBox(
-                    height:
-                        screenSize(context, isHeight: true, percentage: 16.5),
-                    child: Card(
-                      elevation: 0,
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            // Image Show--------------------------
-                            SizedBox(
-                              width: screenSize(context,
-                                  isHeight: false, percentage: 50),
-                              child: ClipRRect(
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(5),
-                                  ),
-                                  child: snap[products[index]]['image'] != false
-                                      ? Image.file(
-                                          File(
-                                              '${imagePath + products[index]}.png'),
-                                          fit: BoxFit.fill,
-                                        )
-                                      : Container(
-                                          color: primaryColor,
-                                          child: Center(
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(3),
-                                              child: Text(
-                                                products[index]
-                                                    .toString()
-                                                    .toUpperCase(),
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                    fontSize: 21,
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                              ),
-                                            ),
-                                          ),
-                                        )),
-                            ),
-                            //---------------------------------------------------------
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const SizedBox(
-                                    height: 2,
-                                  ),
-                                  // ----------------------------------------------------Product Name showed here
-                                  // Text(
-                                  //   products[index].toString().toUpperCase(),
-                                  //   overflow: TextOverflow.ellipsis,
-                                  //   style: const TextStyle(
-                                  //       fontSize: 18,
-                                  //       fontWeight: FontWeight.bold),
-                                  // ),
-                                  // const Divider(),
-                                  // ----------------------------------------------------Product Quantity and Sell Button showed here
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
+                  itemBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: GestureDetector(
+                      onTap: () => navToProductDetail(
+                          context: context,
+                          index: index,
+                          snap: snap,
+                          products: products,
+                          ifsell: false),
+                      child: SizedBox(
+                        height: screenSize(context,
+                            isHeight: true, percentage: 16.5),
+                        child: Card(
+                          elevation: 0.3,
+                          color: cardBgColor,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(9))),
+                          child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                // Show image or Product name
+                                SizedBox(
+                                  width: screenSize(context,
+                                      isHeight: false, percentage: 47),
+                                  child: ClipRRect(
+                                      borderRadius: const BorderRadius.only(
+                                          topLeft: Radius.circular(5),
+                                          bottomLeft: Radius.circular(5)),
+                                      child: FutureBuilder(
+                                          future:
+                                              checkImageExists(products[index]),
+                                          builder: (context, snapshot) {
+                                            var snap = snapshot.data;
+
+                                            if (snap != true) {
+                                              return Container(
+                                                color: primaryColor,
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(3),
+                                                  child: Align(
+                                                    alignment: Alignment.center,
+                                                    child: Text(
+                                                        products[index]
+                                                            .toString()
+                                                            .toUpperCase(),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .displaySmall),
+                                                  ),
+                                                ),
+                                              );
+                                            } else {
+                                              return Image.file(
+                                                File(
+                                                    '${imagePath + products[index]}.jpg'),
+                                                fit: BoxFit.fill,
+                                              );
+                                            }
+                                          })),
+                                ),
+                                const SizedBox(width: 5),
+                                // Show available stock
+                                SizedBox(
+                                  width: screenSize(context,
+                                      isHeight: false, percentage: 30),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const SizedBox(
-                                        width: 30,
+                                      Text(
+                                        'Stock',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall,
                                       ),
-                                      Column(
-                                        children: [
-                                          Text(
-                                            'Stock',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .labelSmall,
-                                          ),
-                                          Text(
-                                            snap[products[index]]['quantity']
-                                                .toString(),
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                fontSize: 27,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ],
+                                      Text(
+                                        snap[products[index]]['quantity']
+                                            .toString(),
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                            color: textLightColor,
+                                            fontSize: snap[products[index]]
+                                                            ['quantity']
+                                                        .toString()
+                                                        .length >
+                                                    6
+                                                ? 18
+                                                : 24,
+                                            fontWeight: FontWeight.bold),
+                                        maxLines: 2,
                                       ),
-                                      const SizedBox(
-                                        width: 15,
-                                      ),
-                                      Row(
-                                        children: [
-                                          IconButton(
-                                              onPressed: () {
-                                                pageRoute(context, index, snap,
-                                                    products, true);
-                                              },
-                                              icon: const Icon(Icons
-                                                  .arrow_forward_ios_outlined)),
-                                        ],
-                                      )
                                     ],
                                   ),
-                                  const SizedBox(
-                                    height: 2,
-                                  )
-                                ],
-                              ),
-                            ),
-                            //---------------------
-                          ]),
+                                ),
+                                // right arrow icon button
+                                SizedBox(
+                                  width: screenSize(context,
+                                      isHeight: false, percentage: 12),
+                                  child: IconButton(
+                                      onPressed: () {
+                                        snap[products[index]]['quantity'] != '0'
+                                            ? navToProductDetail(
+                                                context: context,
+                                                index: index,
+                                                snap: snap,
+                                                products: products,
+                                                ifsell: true)
+                                            : ScaffoldMessenger.of(context)
+                                                .showSnackBar(const SnackBar(
+                                                    content: Text(
+                                                        "You won't sell.Your Stock has Zero (0).")));
+                                      },
+                                      icon: const Icon(
+                                        Icons.arrow_forward_ios_outlined,
+                                        color: textLightColor,
+                                      )),
+                                ),
+                              ]),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              itemCount: products.length,
-            ));
+                  itemCount: products.length,
+                ));
           } else {
-            return const Center();
+            return const Center(
+              child: Text('Please add some products'),
+            );
           }
-          // } else {
-          //   return  Align(
-          //       alignment: Alignment.topLeft, child: LinearProgressIndicator());
-          // }
         },
       ),
     );
   }
-
-  // haveImage(BuildContext context, Map<dynamic, dynamic> snap,
-  //     List<dynamic> products, int index) {
-  //   return [
-  //     //-------------------------------------
-  //     SizedBox(
-  //       width: screenSize(context, isHeight: false, percentage: 45),
-  //       child: ClipRRect(
-  //           borderRadius: const BorderRadius.only(
-  //             topLeft: Radius.circular(5),
-  //           ),
-  //           child: snap[products[index]]['image'] != false
-  //               ? Image.file(
-  //                   File('${imagePath + products[index]}.png'),
-  //                   fit: BoxFit.fill,
-  //                 )
-  //               : Container(
-  //                   color: primaryColor,
-  //                   child: Center(
-  //                     child: Padding(
-  //                       padding: const EdgeInsets.all(3),
-  //                       child: Text(
-  //                         products[index].toString().toUpperCase(),
-  //                         overflow: TextOverflow.ellipsis,
-  //                         style: const TextStyle(
-  //                             fontSize: 25, fontWeight: FontWeight.bold),
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 )),
-  //     ),
-  //     //---------------------------------------------------------
-  //     Expanded(
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.center,
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         children: [
-  //           const SizedBox(
-  //             height: 2,
-  //           ),
-  //           Flexible(
-  //             child: Text(
-  //               products[index].toString().toUpperCase(),
-  //               overflow: TextOverflow.ellipsis,
-  //               style: Theme.of(context).textTheme.headlineMedium,
-  //             ),
-  //           ),
-  //           const Divider(),
-  //           Flexible(
-  //             child: Row(
-  //               mainAxisAlignment: MainAxisAlignment.end,
-  //               children: [
-  //                 Center(
-  //                   child: Column(
-  //                     crossAxisAlignment: CrossAxisAlignment.center,
-  //                     children: [
-  //                       Text(
-  //                         'Stock',
-  //                         style: Theme.of(context).textTheme.labelSmall,
-  //                       ),
-  //                       Text(
-  //                         snap[products[index]]['quantity'].toString(),
-  //                         overflow: TextOverflow.ellipsis,
-  //                         style: TextStyle(
-  //                             fontSize: screenSize(context,
-  //                                 isHeight: true, percentage: 4),
-  //                             fontWeight: FontWeight.bold),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ),
-  //                 const SizedBox(
-  //                   width: 15,
-  //                 ),
-  //                 Row(
-  //                   children: [
-  //                     IconButton(
-  //                         onPressed: () {
-  //                           pageRoute(context, index, snap, products, true);
-  //                         },
-  //                         icon: const Icon(Icons.arrow_forward_ios_outlined)),
-  //                   ],
-  //                 )
-  //               ],
-  //             ),
-  //           ),
-  //           const SizedBox(
-  //             height: 2,
-  //           )
-  //         ],
-  //       ),
-  //     ),
-  //     //---------------------
-  //   ];
-  // }
 
   _fab() {
     return AnimatedSlide(
@@ -352,11 +243,45 @@ class _ProductScreenState extends State<ProductScreen> {
         duration: const Duration(milliseconds: 200),
         opacity: showFab ? 1 : 0,
         child: FloatingActionButton.extended(
-          onPressed: () => navigationTo(context),
+          onPressed: () => navToNewProduct(context),
           label: const Icon(Icons.add),
-          // child: const Icon(Icons.add),
         ),
       ),
     );
+  }
+
+  // navigation routes
+  navToProductDetail({
+    required BuildContext context,
+    required int index,
+    required Map<dynamic, dynamic> snap,
+    required List<dynamic> products,
+    required bool ifsell,
+  }) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(
+            builder: (context) => ProductDetailPage(
+                  index: index,
+                  price: snap[products[index]]['price'],
+                  image: snap[products[index]]['image'],
+                  quantity: snap[products[index]]['quantity'],
+                  productname: products[index],
+                  ifsell: ifsell,
+                )))
+        .then((value) {
+      setState(() {});
+    });
+  }
+
+  navToNewProduct(context) async {
+    var refresh = await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const NewProduct()));
+    setState(() {
+      reFresh = refresh;
+    });
+  }
+
+  navToSplash() {
+    Navigator.pushNamed(context, '/');
   }
 }

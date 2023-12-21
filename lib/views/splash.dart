@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:estore/views/base.dart';
+import 'package:estore/views/base_tabbar.dart';
 import 'package:flutter/cupertino.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -14,10 +14,10 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Timer(
-        const Duration(seconds: 2),
+        const Duration(seconds: 1),
         () => Navigator.pushAndRemoveUntil(
             context,
-            CupertinoPageRoute(builder: (c) => const BaseScreen()),
+            CupertinoPageRoute(builder: (c) => const BaseTapBar()),
             (route) => false));
   }
 

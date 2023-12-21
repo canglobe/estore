@@ -1,0 +1,3 @@
+class ProductHistoryModel {
+  ProductHistoryModel();
+}
